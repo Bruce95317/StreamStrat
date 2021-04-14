@@ -35,5 +35,5 @@ def backtrader_runner(df,strategy_name):
     #print('Starting Portfolio Value: %.2f' % cerebro.broker.getvalue())
     cerebro.run(stdstats = False)
     #print('Final Portfolio Value: %.2f' % cerebro.broker.getvalue())
-    b = Bokeh(scheme=Tradimo(),output_mode='save',filename = 'broker_fig.html')
+    b = Bokeh(scheme=Tradimo(show_headline = False),output_mode='save',filename = 'broker_fig.html')
     cerebro.plot(b,volume = False)
