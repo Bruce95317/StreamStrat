@@ -1,7 +1,7 @@
 # This programme use on-balance Volume (OBV) to determien when to buy or sell stocks
 
 # Import library
-#import pandas as pd
+# import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 from trader import backtrader_runner

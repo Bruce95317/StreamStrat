@@ -2,20 +2,20 @@ import backtrader as bt
 import math
 
 class PandasSMA(bt.feeds.PandasData):
-    lines = ('close','sma30','sma100','buy_signal','sell_signal')
+    lines = ('sma30','sma100','buy_signal','sell_signal')
     params = (
         ('datetime', None),
-        ('open',5),
-        ('high',None),
-        ('low',None),
-        ('close',0),
-        ('volume',None),
+        ('open',1),
+        ('high',2),
+        ('low',3),
+        ('close',4),
+        ('volume',6),
         ('openinterest',None),
-        ('adj_close',None),
-        ('sma30', 1),
-        ('sma100', 2),
-        ('buy_signal', 3),
-        ('sell_signal',4)
+        ('adj_close',5),
+        ('sma30', 7),
+        ('sma100', 8),
+        ('buy_signal', 9),
+        ('sell_signal',10)
     )
 
 class TestSMA(bt.Strategy):

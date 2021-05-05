@@ -4,12 +4,43 @@ import backtrader
 from strategies.SMA import TestSMA,PandasSMA
 from strategies.OBV import TestOBV,PandasOBV
 from strategies.DEMA import TestDEMA,PandasDEMA
-from backtrader_plotting import Bokeh
-from backtrader_plotting.schemes import Tradimo
+
+def processPlots(cerebro, numfigs=1, iplot=True, start=None, end=None,
+         width=16, height=9, dpi=300, use=None, **kwargs):
+
+    # if self._exactbars > 0:
+    #     return
+    from backtrader import plot
+    import matplotlib
+    matplotlib.use('agg')
+
+    if cerebro.p.oldsync:
+        plotter = plot.Plot_OldSync(**kwargs)
+    else:
+        plotter = plot.Plot(**kwargs)
+
+    plotter = plot.Plot(**kwargs)
+
+    figs = []
+    for stratlist in cerebro.runstrats:
+        for si, strat in enumerate(stratlist):
+            rfig = plotter.plot(strat, figid=si * 100,
+                                numfigs=numfigs, iplot=iplot,
+                                start=start, end=end, use=use)
+            figs.append(rfig)
+
+        # this blocks code execution
+        # plotter.show()
+
+    for fig in figs:
+        for f in fig:
+            f.set_size_inches(width, height)
+            f.set_dpi(dpi)
+            f.savefig('broker_fig.png', bbox_inches='tight')
+    return figs
 
 def backtrader_runner(df,strategy_name):
     cerebro = backtrader.Cerebro()
-    cerebro.addobserver(backtrader.observers.Broker)
     cerebro.addsizer(backtrader.sizers.FixedSize, stake=1000)
 
     cerebro.broker.set_cash(1000000)
@@ -33,7 +64,6 @@ def backtrader_runner(df,strategy_name):
     cerebro.adddata(data)
 
     #print('Starting Portfolio Value: %.2f' % cerebro.broker.getvalue())
-    cerebro.run(stdstats = False)
-    #print('Final Portfolio Value: %.2f' % cerebro.broker.getvalue())
-    b = Bokeh(scheme=Tradimo(show_headline = False),output_mode='save',filename = 'broker_fig.html')
-    cerebro.plot(b,volume = False)
+    cerebro.run()
+    #print('Final Portfolio Value: %.2  f' % cerebro.broker.getvalue())
+    processPlots(cerebro,width=12, height=6, dpi=300)

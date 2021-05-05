@@ -23,8 +23,6 @@ plt.style.use('fivethirtyeight')
 # plt.show()
 
 # Create a function to signal when to buy and when to sell the asset/stock
-
-
 def buy_sell(data,stock_name):
     sigPriceBuy = []
     sigPriceSell = []
@@ -33,7 +31,7 @@ def buy_sell(data,stock_name):
     for i in range(len(data)):
         if data['SMA30'][i] > data['SMA100'][i]:
             if flag != 1:
-                sigPriceBuy.append(data[stock_name][i])
+                sigPriceBuy.append(data['Adj Close'][i])
                 sigPriceSell.append(np.nan)
                 flag = 1
             else:
@@ -42,7 +40,7 @@ def buy_sell(data,stock_name):
         elif data['SMA30'][i] < data['SMA100'][i]:
             if flag != 0:
                 sigPriceBuy.append(np.nan)
-                sigPriceSell.append(data[stock_name][i])
+                sigPriceSell.append(data['Adj Close'][i])
                 flag = 0
             else:
                 sigPriceBuy.append(np.nan)
@@ -65,8 +63,7 @@ def plot_SMA(df,stock_name):
     SMA100['Adj Close Price'] = df['Adj Close'].rolling(window=100).mean()
 
     # Create a new data frame ot store all the data
-    data = pd.DataFrame()
-    data[stock_name] = df['Adj Close']
+    data = df.copy(deep=True)
     data['SMA30'] = SMA30['Adj Close Price']
     data['SMA100'] = SMA100['Adj Close Price']
 
@@ -76,12 +73,11 @@ def plot_SMA(df,stock_name):
     data['Sell_Signal_Price'] = buy_sell1[1]
 
     # put into backtrader
-    data['Open'] = df['Open']
     backtrader_runner(data,'SMA')
 
     plot_obj = plt.figure(figsize=(12.2, 4.5))
     ax = plot_obj.gca()
-    ax.plot(data[stock_name], label=(stock_name + '_Close'), alpha=0.35)
+    ax.plot(data['Adj Close'], label=(stock_name + '_Close'), alpha=0.35)
     ax.plot(data['SMA30'], label='SMA30', alpha=0.35)
     ax.plot(data['SMA100'], label='SMA100', alpha=0.35)
     ax.scatter(data['Buy_Signal_Price'].dropna().index, data['Buy_Signal_Price'].dropna(), color='green',

@@ -2,16 +2,16 @@ import backtrader as bt
 import math
 
 class PandasOBV(bt.feeds.PandasData):
-    lines = ('close','obv','obv_ema','buy_signal','sell_signal')
+    lines = ('obv','obv_ema','buy_signal','sell_signal')
     params = (
         ('datetime', None),
         ('open',1),
-        ('high',None),
-        ('low',None),
+        ('high',2),
+        ('low',3),
         ('close',4),
-        ('volume',None),
+        ('volume',6),
         ('openinterest',None),
-        ('adj_close',None),
+        ('adj_close',5),
         ('obv', 7),
         ('obv_ema', 8),
         ('buy_signal', 9),

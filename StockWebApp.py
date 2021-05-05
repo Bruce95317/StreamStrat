@@ -108,18 +108,21 @@ st.line_chart(df['Volume'])
 if chosen_strategy == 'DEMA':
     DEMA_plot_obj = plot_DEMA(df,symbol)
     st.write(DEMA_plot_obj)
-    with open("broker_fig.html", "r", encoding='utf-8') as f:
-        components.html(f.read(),height=275)
+    broker_fig = Image.open(
+        "broker_fig.png")
+    st.image(broker_fig, use_column_width=True)
 elif chosen_strategy == 'OBV':
     OBV_plot_obj = plot_OBV(df,symbol)
     st.write(OBV_plot_obj)
-    with open("broker_fig.html", "r", encoding='utf-8') as f:
-        components.html(f.read(),height=275)
+    broker_fig = Image.open(
+        "broker_fig.png")
+    st.image(broker_fig, use_column_width=True)
 else:
     SMA_plot_obj = plot_SMA(df,symbol)
     st.write(SMA_plot_obj)
-    with open("broker_fig.html", "r", encoding='utf-8') as f:
-        components.html(f.read(),height=275)
+    broker_fig = Image.open(
+        "broker_fig.png")
+    st.image(broker_fig, use_column_width=True)
 
 # Get statistica on the data
 st.header('Data Statistics')

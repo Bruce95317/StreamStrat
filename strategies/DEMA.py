@@ -2,16 +2,16 @@ import backtrader as bt
 import math
 
 class PandasDEMA(bt.feeds.PandasData):
-    lines = ('close','dema_short','dema_long','buy_signal','sell_signal')
+    lines = ('dema_short','dema_long','buy_signal','sell_signal')
     params = (
         ('datetime', None),
         ('open',1),
-        ('high',None),
-        ('low',None),
+        ('high',2),
+        ('low',3),
         ('close',4),
-        ('volume',None),
+        ('volume',6),
         ('openinterest',None),
-        ('adj_close',None),
+        ('adj_close',5),
         ('dema_short', 7),
         ('dema_long', 8),
         ('buy_signal', 9),
