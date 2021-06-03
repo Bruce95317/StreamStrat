@@ -98,8 +98,8 @@ def append_cds(base_cds: ColumnDataSource, new_cds: ColumnDataSource):
 
 
 def get_indicator_data(indicator: bt.Indicator):
-    """The indicator might have been created using a specific line (like SMA(old_data.lines.close)). In this case
-    a LineSeriesStub has been created for which we have to resolve the original old_data"""
+    """The indicator might have been created using a specific line (like SMA(data.lines.close)). In this case
+    a LineSeriesStub has been created for which we have to resolve the original data"""
     data = indicator.data
     if isinstance(data, bt.LineSeriesStub):
         return data._owner

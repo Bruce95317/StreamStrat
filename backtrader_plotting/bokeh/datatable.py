@@ -54,7 +54,7 @@ class TableGenerator(object):
             raise Exception(f"Unsupported ColumnDataType: '{ctype}'")
 
     def get_analyzers_tables(self, analyzer: bt.analyzers.Analyzer, table_width) -> (Paragraph, List[DataTable]):
-        """Return a header for this analyzer and one *or more* old_data tables."""
+        """Return a header for this analyzer and one *or more* data tables."""
         if hasattr(analyzer, 'get_analysis_table'):
             title, table_columns_list = analyzer.get_analysis_table()
         else:

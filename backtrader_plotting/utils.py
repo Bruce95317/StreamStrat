@@ -53,7 +53,7 @@ def convert_by_line_clock(line, line_clk, new_clk):
     if new_clk is None:
         return line
 
-    clk_offset = len(line_clk) - len(line)  # sometimes the clock has more old_data than the old_data line
+    clk_offset = len(line_clk) - len(line)  # sometimes the clock has more data than the data line
     new_line = []
     next_start_idx = 0
     for sc in new_clk:
@@ -63,7 +63,7 @@ def convert_by_line_clock(line, line_clk, new_clk):
                 # exact hit
                 line_idx = i - clk_offset
                 if line_idx < 0:
-                    # old_data line is shorter so we don't have old_data
+                    # data line is shorter so we don't have data
                     new_line.append(float('nan'))
                 else:
                     new_line.append(line[line_idx])
@@ -85,7 +85,7 @@ def convert_to_pandas(strat_clk, obj: bt.LineSeries, start: datetime = None, end
         if linealias == 'datetime':
             continue
 
-        # get old_data limited to time range
+        # get data limited to time range
         data = line.plotrange(start, end)
 
         ndata = convert_by_line_clock(data, lines_clk, strat_clk)
@@ -104,7 +104,7 @@ def get_clock_line(obj: Union[bt.ObserverBase, bt.IndicatorBase, bt.StrategyBase
     elif isinstance(obj, (bt.StrategyBase, bt.AbstractDataBase)):
         clk = obj
     elif isinstance(obj, bt.LineSeriesStub):
-        # indicators can be created to run on a single line (instead of e.g. a old_data object)
+        # indicators can be created to run on a single line (instead of e.g. a data object)
         # in that case we grab the owner of that line to find the corresponding clok
         return get_clock_line(obj._owner)
     else:

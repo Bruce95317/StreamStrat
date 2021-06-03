@@ -44,7 +44,7 @@ def DEMA_strategy(data):
     buy_list = []
     sell_list = []
     flag = False
-    # Loop through the old_data
+    # Loop through the data
     for i in range(0, len(data)):
         if data['DEMA_short'][i] > data['DEMA_long'][i] and flag == False:
             buy_list.append(data['Close'][i])
@@ -58,11 +58,11 @@ def DEMA_strategy(data):
             buy_list.append(np.nan)
             sell_list.append(np.nan)
 
-    # store buy and sell signal/lists into the old_data set
+    # store buy and sell signal/lists into the data set
     data['Buy'] = buy_list
     data['Sell'] = sell_list
 
-# Store the short term DEMA (20 day period) and the long term DEMA (50 day period) into the old_data set
+# Store the short term DEMA (20 day period) and the long term DEMA (50 day period) into the data set
 
 def plot_DEMA(data,stock_name):
     df = data.copy(deep=True)

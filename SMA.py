@@ -14,7 +14,7 @@ from bokeh.models import ColumnDataSource,HoverTool
 
 #plt.style.use('fivethirtyeight')
 
-# laod the old_data
+# laod the data
 #AMZN = pd.read_csv('old_data/AMZN.csv')
 
 
@@ -69,12 +69,12 @@ def plot_SMA(df,stock_name):
     SMA100 = pd.DataFrame()
     SMA100['Adj Close Price'] = df['Adj Close'].rolling(window=100).mean()
 
-    # Create a new old_data frame ot store all the old_data
+    # Create a new data frame ot store all the data
     data = df.copy(deep=True)
     data['SMA30'] = SMA30['Adj Close Price']
     data['SMA100'] = SMA100['Adj Close Price']
 
-    # Store the buy and sell old_data into a variable
+    # Store the buy and sell data into a variable
     buy_sell1 = buy_sell(data)
     data['Buy_Signal_Price'] = buy_sell1[0]
     data['Sell_Signal_Price'] = buy_sell1[1]
@@ -84,13 +84,13 @@ def plot_SMA(df,stock_name):
     '''
     plot_obj = plt.figure(figsize=(12.2, 4.5))
     ax = plot_obj.gca()
-    ax.plot(old_data['Adj Close'], label='Close Price', alpha=0.35)
-    ax.plot(old_data['SMA30'], label='SMA30', alpha=0.35)
-    ax.plot(old_data['SMA100'], label='SMA100', alpha=0.35)
+    ax.plot(data['Adj Close'], label='Close Price', alpha=0.35)
+    ax.plot(data['SMA30'], label='SMA30', alpha=0.35)
+    ax.plot(data['SMA100'], label='SMA100', alpha=0.35)
 
-    ax.scatter(old_data['Buy_Signal_Price'].dropna().index, old_data['Buy_Signal_Price'].dropna(), color='green',
+    ax.scatter(data['Buy_Signal_Price'].dropna().index, data['Buy_Signal_Price'].dropna(), color='green',
                 label='Buy Signal', marker='^', alpha=1)
-    ax.scatter(old_data['Sell_Signal_Price'].dropna().index, old_data['Sell_Signal_Price'].dropna(), color='red',
+    ax.scatter(data['Sell_Signal_Price'].dropna().index, data['Sell_Signal_Price'].dropna(), color='red',
                 label='Sell Signal', marker='v', alpha=1)
 
     ax.set_title(stock_name + ' Close Price Buy and Sell Signals')

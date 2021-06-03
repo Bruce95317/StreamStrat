@@ -76,7 +76,7 @@ class HoverContainer(metaclass=bt.MetaParams):
             if apply:
                 prefix = ''
                 top = True
-                # prefix with old_data name if we got multiple datas
+                # prefix with data name if we got multiple datas
                 if self.p.is_multidata and foreign:
                     if isinstance(src_obj, bt.Indicator):
                         prefix = label_resolver.datatarget2label(src_obj.datas) + " - "
@@ -162,10 +162,10 @@ class FigureEnvelope(object):
     @staticmethod
     def _resolve_tradingdomain(obj) -> Union[bool, str]:
         if isinstance(obj, bt.AbstractDataBase):
-            # old_data feeds are end points
+            # data feeds are end points
             return obj._name
         elif isinstance(obj, bt.IndicatorBase):
-            # lets find the old_data the indicator is based on
+            # lets find the data the indicator is based on
             data = get_indicator_data(obj)
             return FigureEnvelope._resolve_tradingdomain(data)
         elif isinstance(obj, bt.ObserverBase):
@@ -260,7 +260,7 @@ class FigureEnvelope(object):
             code="""
                 // We override this axis' formatter's `doFormat` method
                 // with one that maps index ticks to dates. Some of those dates
-                // are undefined (e.g. those whose ticks fall out of defined old_data
+                // are undefined (e.g. those whose ticks fall out of defined data
                 // range) and we must filter out and account for those, otherwise
                 // the formatter computes invalid visible span and returns some
                 // labels as 'ERR'.
@@ -269,7 +269,7 @@ class FigureEnvelope(object):
                 // -- FunctionTickFormatter.doFormat(), i.e. _this_ code, no longer
                 // executes.
                 axis.formatter.doFormat = function (ticks) {
-                    const dates = ticks.map(i => source.old_data.datetime[source.old_data.index.indexOf(i)]),
+                    const dates = ticks.map(i => source.data.datetime[source.data.index.indexOf(i)]),
                           valid = t => t !== undefined,
                           labels = formatter.doFormat(dates.filter(valid));
                     let i = 0;
@@ -343,7 +343,7 @@ class FigureEnvelope(object):
         # we use the open-line as a indicator for NaN values
         nan_ref = df[col_open]
 
-        # TODO: we want to have NaN values in the color lines if the corresponding old_data is also NaN
+        # TODO: we want to have NaN values in the color lines if the corresponding data is also NaN
         # find better way with less isnan usage
 
         color_df = pd.DataFrame(index=df.index)
@@ -407,14 +407,14 @@ class FigureEnvelope(object):
         else:
             raise Exception(f"Unsupported style '{self._scheme.style}'")
 
-        # make sure the regular y-axis only scales to the normal old_data on 1st axis (not to e.g. volume old_data on 2nd axis)
+        # make sure the regular y-axis only scales to the normal data on 1st axis (not to e.g. volume data on 2nd axis)
         self.figure.y_range.renderers.append(renderer)
 
         if self._scheme.volume and self._scheme.voloverlay:
             self.plot_volume(data, self._scheme.voltrans, True)
 
     def plot_volume(self, data: bt.AbstractDataBase, alpha=1.0, extra_axis=False):
-        """extra_axis displays a second axis (for overlay on old_data plotting)"""
+        """extra_axis displays a second axis (for overlay on data plotting)"""
         source_id = FigureEnvelope._source_id(data)
 
         self._add_columns([(source_id + 'volume', np.float64), (source_id + 'colors_volume', np.object)])
@@ -446,7 +446,7 @@ class FigureEnvelope(object):
 
         vbars = self.figure.vbar('index', get_bar_width(), f'{source_id}volume', 0, source=self._cds, fill_color=f'{source_id}colors_volume', line_color="black", **kwargs)
 
-        # make sure the new axis only auto-scales to the volume old_data
+        # make sure the new axis only auto-scales to the volume data
         if extra_axis:
             self.figure.extra_y_ranges['axvol'].renderers = [vbars]
 
@@ -550,7 +550,7 @@ class FigureEnvelope(object):
 
             renderer = glyph_fnc("index", source=self._cds, **kwglyphs)
 
-            # make sure the regular y-axis only scales to the normal old_data (old_data + ind/obs) on 1st axis (not to e.g. volume old_data on 2nd axis)
+            # make sure the regular y-axis only scales to the normal data (data + ind/obs) on 1st axis (not to e.g. volume data on 2nd axis)
             self.figure.y_range.renderers.append(renderer)
 
             # for markers add additional renderer so hover pops up for all of them

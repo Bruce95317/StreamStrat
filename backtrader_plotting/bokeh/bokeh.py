@@ -444,7 +444,7 @@ class Bokeh(metaclass=bt.MetaParams):
 
         strat_clk = strat_clk[-num_back:]
 
-        # we use timezone of first old_data. we might see duplicated timestamps here
+        # we use timezone of first data. we might see duplicated timestamps here
         dtline = [bt.num2date(x, strategy.datas[0]._tz) for x in strat_clk]
 
         # add an index line to use as x-axis (instead of datetime axis) to avoid datetime gaps (e.g. weekends)
@@ -519,7 +519,7 @@ class Bokeh(metaclass=bt.MetaParams):
 
     def show(self):
         """Display a figure (called by backtrader)."""
-         # as the plot() function only created the figures and the columndatasources with no old_data -> now we fill it
+         # as the plot() function only created the figures and the columndatasources with no data -> now we fill it
         for idx in range(len(self.figurepages)):
             model = self.generate_model(idx)
 

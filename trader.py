@@ -49,8 +49,8 @@ def backtrader_runner(df,strategy_name):
     cerebro.addsizer(backtrader.sizers.FixedSize, stake=1000)
 
     cerebro.broker.set_cash(1000000)
-    #old_data = backtrader.feeds.YahooFinanceCSVData(
-    #    dataname='old_data/GOOG.csv',plot=False)
+    #data = backtrader.feeds.YahooFinanceCSVData(
+    #    dataname='data/GOOG.csv',plot=False)
         # Do not pass values before this date
         #fromdate=datetime.datetime(2001, 10, 1),
         # Do not pass values after this date

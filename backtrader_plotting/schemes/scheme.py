@@ -10,7 +10,7 @@ class Scheme(_BtPlotScheme):
     def _set_params(self):
         """
         hover tooltips of datas will contain all other datas and all indicators/observers
-        if set to False then tooltips of datas will only contain the current old_data and indicators/observers related to that old_data
+        if set to False then tooltips of datas will only contain the current data and indicators/observers related to that data
         """
         self.tabs = 'single'
         self.show_headline = True
@@ -80,7 +80,7 @@ class Scheme(_BtPlotScheme):
         self.axis_tickformat_seconds = "%H:%M:%S"
         self.axis_tickformat_years = "%Y %b"
 
-        self.y_range_padding = 0.5  # used to add padding on the y-axis for all old_data except volume
+        self.y_range_padding = 0.5  # used to add padding on the y-axis for all data except volume
 
     def _set_args(self, **kwargs):
         for k, v in kwargs.items():

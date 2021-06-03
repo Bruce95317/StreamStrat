@@ -19,7 +19,7 @@ stock_dict = {'AAPL': 'Apple Inc.', 'MSFT': 'Microsoft Corporation', 'AMZN': 'Am
 # ADD title and image
 st.write("""
 # Stock Market Web Application 
-**Stock price old_data** , date range from Jun 01,2017 to Jun 01, 2021
+**Stock price data** , date range from Jun 01,2017 to Jun 01, 2021
 """)
 
 
@@ -52,18 +52,18 @@ def get_company_name(symbol):
     else:
         'Not Avaliable'
 
-# Create a function to get the comapny price old_data and selected timeframe
+# Create a function to get the comapny price data and selected timeframe
 
 
 def get_data(symbol, start, end):
 
-    # Load the old_data
+    # Load the data
     if symbol in stock_dict.keys():
         df = pd.read_csv(f"data/{symbol}.csv")
     else:
         "Not Found"
 
-    # Get the old_data range
+    # Get the data range
     #start = pd.to_datetime(start)
     #end = pd.to_datetime(end)
 
@@ -89,7 +89,7 @@ def get_data(symbol, start, end):
 
 # Set the index to be the date
 start, end, symbol , chosen_strategy = get_input()
-# Get the old_data
+# Get the data
 df = get_data(symbol, start, end)
 # Get the company name
 company_name = get_company_name(symbol)
@@ -116,6 +116,6 @@ st.bokeh_chart(plot_obj,use_container_width=True)
 st.bokeh_chart(model,use_container_width=True)
 
 
-# Get statistica on the old_data
+# Get statistica on the data
 st.header('Data Statistics')
 st.write(df.describe())

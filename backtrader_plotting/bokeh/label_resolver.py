@@ -29,7 +29,7 @@ def datatarget2label(datas: List[Union[bt.AbstractDataBase, bt.Indicator]]):
                     labels.append(val)
                     break
         else:
-            raise RuntimeError(f'Unexpected old_data type: {d.__class__}')
+            raise RuntimeError(f'Unexpected data type: {d.__class__}')
 
     if len(labels) == 0:
         return "Unidentified"
@@ -68,7 +68,7 @@ def strategy2shortname(strategy: bt.Strategy) -> str:
 
 
 def indicator2fullid(ind: bt.Indicator) -> str:
-    """Returns a string listing allZ involved old_data feeds. Empty string if there is only a single feed in the mix"""
+    """Returns a string listing allZ involved data feeds. Empty string if there is only a single feed in the mix"""
     names = []
     for x in ind.datas:
         if isinstance(x, bt.AbstractDataBase):

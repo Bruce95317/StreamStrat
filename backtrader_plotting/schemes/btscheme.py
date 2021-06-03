@@ -95,7 +95,7 @@ class PlotScheme(object):
 
         # How many "subparts" takes a minor chart (indicators/observers) in the
         # overall chart. This is proportional to the total number of subcharts
-        # Together with rowsmajor, this defines a proportion ratio betwen old_data
+        # Together with rowsmajor, this defines a proportion ratio betwen data
         # charts and indicators/observers charts
         self.rowsminor = 1
 
@@ -128,16 +128,16 @@ class PlotScheme(object):
         # Alpha blending for fill areas between lines (_fill_gt and _fill_lt)
         self.fillalpha = 0.20
 
-        # Wether to plot volume or not. Note: if the old_data in question has no
+        # Wether to plot volume or not. Note: if the data in question has no
         # volume values, volume plotting will be skipped even if this is True
         self.volume = True
 
-        # Wether to overlay the volume on the old_data or use a separate subchart
+        # Wether to overlay the volume on the data or use a separate subchart
         self.voloverlay = True
-        # Scaling of the volume to the old_data when plotting as overlay
+        # Scaling of the volume to the data when plotting as overlay
         self.volscaling = 0.33
         # Pushing overlay volume up for better visibiliy. Experimentation
-        # needed if the volume and old_data overlap too much
+        # needed if the volume and data overlap too much
         self.volpushup = 0.00
 
         # Default colour for the volume of a bullish day
@@ -181,7 +181,7 @@ class PlotScheme(object):
         # strftime Format string for the display of ticks on the x axis
         self.fmt_x_ticks = None
 
-        # strftime Format string for the display of old_data points values
+        # strftime Format string for the display of data points values
         self.fmt_x_data = None
 
     def color(self, idx):

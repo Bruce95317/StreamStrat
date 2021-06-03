@@ -101,7 +101,7 @@ class PlotListener(bt.ListenerBase):
             client = self._clients[document.session_context.id]
             updatepkg_df: pandas.DataFrame = self._datastore[self._datastore['index'] > client.last_data_index]
 
-            # skip if we don't have new old_data
+            # skip if we don't have new data
             if updatepkg_df.shape[0] == 0:
                 return
 
@@ -122,7 +122,7 @@ class PlotListener(bt.ListenerBase):
     def next(self):
         strategy = self._cerebro.runningstrats[self.p.strategyidx]
 
-        # treat as update of old old_data if strategy datetime is duplicated and we have already old_data stored
+        # treat as update of old data if strategy datetime is duplicated and we have already data stored
         is_update = len(strategy) > 1 and strategy.datetime[0] == strategy.datetime[-1] and self._datastore.shape[0] > 0
 
         if is_update:
@@ -133,10 +133,10 @@ class PlotListener(bt.ListenerBase):
                 new_count = fulldata.isnull().sum()
                 cur_count = self._datastore.isnull().sum()
 
-                # boolean series that indicates which column is missing old_data
+                # boolean series that indicates which column is missing data
                 patched_cols = new_count != cur_count
 
-                # get dataframe with only those columns that added old_data
+                # get dataframe with only those columns that added data
                 patchcols = fulldata[fulldata.columns[patched_cols]]
                 for column_name in patchcols.columns:
                     for index, row in self._datastore.iterrows():
@@ -153,7 +153,7 @@ class PlotListener(bt.ListenerBase):
                         # or both not NaN but different now
                         # and don't count it as True when both are NaN
                         if not (pandas.isna(d) and pandas.isna(od)) and ((pandas.isna(od) and not pandas.isna(d)) or d != od):
-                            self._datastore.at[index, column_name] = d  # update old_data in datastore
+                            self._datastore.at[index, column_name] = d  # update data in datastore
                             for sess_id in self._clients.keys():
                                 self._patch_pkgs[sess_id].append((column_name, odt, d))
 
@@ -169,7 +169,7 @@ class PlotListener(bt.ListenerBase):
                 # i have seen an empty line in the past. let's catch it here
                 assert new_frame['datetime'].iloc[0] != np.datetime64('NaT')
 
-                # append old_data and remove old old_data
+                # append data and remove old data
                 self._datastore = self._datastore.append(new_frame)
                 self._datastore = self._datastore.tail(self.p.lookback)
 

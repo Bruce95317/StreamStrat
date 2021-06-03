@@ -9,9 +9,10 @@ from trader import backtrader_runner
 from bokeh.plotting import figure
 from bokeh.models import ColumnDataSource,HoverTool
 
+
 #plt.style.use('fivethirtyeight')
 
-# Store the old_data
+# Store the data
 #df = pd.read_csv('old_data/AMZN.csv')
 # Set the date to be the index
 #df = df.set_index(pd.DatetimeIndex(df['Date'].values))
@@ -46,7 +47,7 @@ def buy_sell(signal, col1, col2):
     flag = -1
 
 
-# Loop through the length of the old_data set
+# Loop through the length of the data set
     for i in range(0, len(signal)):
         # If OBV > OBV_EMA Then Buy--> col1 =>'OBV' and col2 => 'OBV_EMA'
         if signal[col1][i] > signal[col2][i] and flag != 1:
@@ -70,7 +71,7 @@ def plot_OBV(data, stock_name):
     OBV = []
     OBV.append(0)
 
-    # Loop throught the old_data set (close proce) from the second row (index 1) to the end of the old_data set
+    # Loop throught the data set (close proce) from the second row (index 1) to the end of the data set
     for i in range(1, len(df.Close)):
         if df.Close[i] > df.Close[i-1]:
             OBV.append(OBV[-1]+df.Volume[i])

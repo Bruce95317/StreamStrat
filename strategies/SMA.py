@@ -29,7 +29,7 @@ class TestSMA(bt.Strategy):
         self.sell_signal = self.datas[0].sell_signal
         self.buy_signal = self.datas[0].buy_signal
 
-        # Keep a reference to the "close" line in the old_data[0] dataseries
+        # Keep a reference to the "close" line in the data[0] dataseries
         self.dataclose = self.datas[0].close
 
         # To keep track of pending orders

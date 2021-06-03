@@ -73,7 +73,7 @@ class HoverContainer(metaclass=bt.MetaParams):
             if apply:
                 prefix = ''
                 top = True
-                # prefix with old_data name if we got multiple datas
+                # prefix with data name if we got multiple datas
                 if self.p.is_multidata and foreign:
                     if isinstance(src_obj, bt.Indicator):
                         prefix = label_resolver.datatarget2label(src_obj.datas) + " - "
@@ -190,7 +190,7 @@ class Figure(object):
             code="""
             // We override this axis' formatter's `doFormat` method
             // with one that maps index ticks to dates. Some of those dates
-            // are undefined (e.g. those whose ticks fall out of defined old_data
+            // are undefined (e.g. those whose ticks fall out of defined data
             // range) and we must filter out and account for those, otherwise
             // the formatter computes invalid visible span and returns some
             // labels as 'ERR'.
@@ -199,7 +199,7 @@ class Figure(object):
             // -- FunctionTickFormatter.doFormat(), i.e. _this_ code, no longer
             // executes.  
                 axis.formatter.doFormat = function (ticks) {
-                    const dates = ticks.map(i => source.old_data.datetime[i]),
+                    const dates = ticks.map(i => source.data.datetime[i]),
                           valid = t => t !== undefined,
                           labels = formatter.doFormat(dates.filter(valid));
                     let i = 0;
@@ -315,7 +315,7 @@ class Figure(object):
             self.plot_volume(data, strat_clk, self._scheme.voltrans, True)
 
     def plot_volume(self, data: bt.AbstractDataBase, strat_clk: array, alpha, extra_axis=False):
-        """extra_axis displays a second axis (for overlay on old_data plotting)"""
+        """extra_axis displays a second axis (for overlay on data plotting)"""
         source_id = Figure._source_id(data)
 
         df = convert_to_pandas(strat_clk, data, self._start, self._end)
