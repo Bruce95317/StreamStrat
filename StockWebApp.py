@@ -4,12 +4,22 @@ from PIL import Image
 from DEMA import plot_DEMA
 from OBV import plot_OBV
 from SMA import plot_SMA
-import streamlit.components.v1 as components
+
+stock_dict = {'AAPL': 'Apple Inc.', 'MSFT': 'Microsoft Corporation', 'AMZN': 'Amazon.com, Inc.',
+              'GOOG': 'Alphabet Inc.', 'FB': 'Facebook, Inc.', 'TSLA': 'Tesla, Inc.',
+              'BABA': 'Alibaba Group Holding Limited', 'TSM': 'Taiwan Semiconductor Manufacturing Company Limited',
+              'JPM': 'JPMorgan Chase & Co.', 'NVDA': 'NVIDIA Corporation', 'DIS': 'The Walt Disney Company',
+              'KO': 'The Coca-Cola Company', 'VZ': 'Verizon Communications Inc.', 'INTC': 'Intel Corporation',
+              'NFLX': 'Netflix, Inc.', 'PFE': 'Pfizer Inc.', 'BA': 'The Boeing Company', 'SE': 'Sea Limited',
+              'SQ': 'Square, Inc.', 'AMD': 'Advanced Micro Devices, Inc.', 'ZM': 'Zoom Video Communications, Inc.',
+              'ABNB': 'Airbnb, Inc.', 'GM': 'General Motors Company', 'NIO': 'NIO Inc.', 'F': 'Ford Motor Company',
+              'PLTR': 'Palantir Technologies Inc.', 'GME': 'GameStop Corp.', 'AMC': 'AMC Entertainment Holdings, Inc.',
+              'BYND': 'Beyond Meat, Inc.', 'BB': 'BlackBerry Limited'}
 
 # ADD title and image
 st.write("""
 # Stock Market Web Application 
-**Stock price data** , date range from Jan 22,2020 to Jan 22, 2021
+**Stock price old_data** , date range from Jun 01,2017 to Jun 01, 2021
 """)
 
 
@@ -26,9 +36,9 @@ st.sidebar.header('User Input')
 
 
 def get_input():
-    start_date = st.sidebar.text_input("Start date", "2020-01-22")
-    end_date = st.sidebar.text_input("End date", "2021-01-22")
-    stock_symbol = st.sidebar.text_input("Stock Symbol", "AMZN")
+    start_date = st.sidebar.date_input("Start date", pd.to_datetime("2020-06-01"))
+    end_date = st.sidebar.date_input("End date", pd.to_datetime("2021-06-01"))
+    stock_symbol = st.sidebar.selectbox("Stock Symbol",list(stock_dict.keys()))
     strategy_choices = ('DEMA', 'OBV', 'SMA')
     selected_strategy = st.sidebar.selectbox('Chosen strategy', strategy_choices)
     return start_date, end_date, stock_symbol, selected_strategy
@@ -37,37 +47,25 @@ def get_input():
 
 
 def get_company_name(symbol):
-    if symbol == 'AMZN':
-        return 'AMZN'
-    elif symbol == 'TSLA':
-        return 'Tesla'
-    elif symbol == 'GOOG':
-        return 'AlpMZNhabat'
-    elif symbol == 'AAPL':
-        return 'Apple'
+    if symbol in stock_dict.keys():
+        return stock_dict[symbol]
     else:
         'Not Avaliable'
 
-# Create a function to get the comapny price data and selected timeframe
+# Create a function to get the comapny price old_data and selected timeframe
 
 
 def get_data(symbol, start, end):
 
-    # Load the data
-    if symbol.upper() == 'AMZN':
-        df = pd.read_csv('data/AMZN.csv')
-    elif symbol.upper() == 'TSLA':
-        df = pd.read_csv("data/TSLA.csv")
-    elif symbol.upper() == 'GOOG':
-        df = pd.read_csv("data/GOOG.csv")
-    elif symbol.upper() == 'AAPL':
-        df = pd.read_csv("data/AAPL.csv")
+    # Load the old_data
+    if symbol in stock_dict.keys():
+        df = pd.read_csv(f"data/{symbol}.csv")
     else:
         "Not Found"
 
-    # Get the data range
-    start = pd.to_datetime(start)
-    end = pd.to_datetime(end)
+    # Get the old_data range
+    #start = pd.to_datetime(start)
+    #end = pd.to_datetime(end)
 
     # Set the start and end index rown to 0
     start_row = 0
@@ -91,10 +89,10 @@ def get_data(symbol, start, end):
 
 # Set the index to be the date
 start, end, symbol , chosen_strategy = get_input()
-# Get the data
+# Get the old_data
 df = get_data(symbol, start, end)
 # Get the company name
-company_name = get_company_name(symbol.upper())
+company_name = get_company_name(symbol)
 
 
 # Display the close prices
@@ -106,24 +104,18 @@ st.header(company_name+" Volume\n")
 st.line_chart(df['Volume'])
 
 if chosen_strategy == 'DEMA':
-    DEMA_plot_obj = plot_DEMA(df,symbol)
-    st.write(DEMA_plot_obj)
-    broker_fig = Image.open(
-        "broker_fig.png")
-    st.image(broker_fig, use_column_width=True)
+    plot_obj,model = plot_DEMA(df,symbol)
 elif chosen_strategy == 'OBV':
-    OBV_plot_obj = plot_OBV(df,symbol)
-    st.write(OBV_plot_obj)
-    broker_fig = Image.open(
-        "broker_fig.png")
-    st.image(broker_fig, use_column_width=True)
+    plot_obj,model = plot_OBV(df,symbol)
 else:
-    SMA_plot_obj = plot_SMA(df,symbol)
-    st.write(SMA_plot_obj)
-    broker_fig = Image.open(
-        "broker_fig.png")
-    st.image(broker_fig, use_column_width=True)
+    plot_obj,model = plot_SMA(df,symbol)
 
-# Get statistica on the data
+st.bokeh_chart(plot_obj,use_container_width=True)
+#broker_fig = Image.open("broker_fig.png")
+#st.image(broker_fig, use_column_width=True)
+st.bokeh_chart(model,use_container_width=True)
+
+
+# Get statistica on the old_data
 st.header('Data Statistics')
 st.write(df.describe())

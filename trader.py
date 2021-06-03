@@ -4,7 +4,10 @@ import backtrader
 from strategies.SMA import TestSMA,PandasSMA
 from strategies.OBV import TestOBV,PandasOBV
 from strategies.DEMA import TestDEMA,PandasDEMA
+from backtrader_plotting import Bokeh
+from backtrader_plotting.schemes import Tradimo
 
+'''
 def processPlots(cerebro, numfigs=1, iplot=True, start=None, end=None,
          width=16, height=9, dpi=300, use=None, **kwargs):
 
@@ -38,14 +41,16 @@ def processPlots(cerebro, numfigs=1, iplot=True, start=None, end=None,
             f.set_dpi(dpi)
             f.savefig('broker_fig.png', bbox_inches='tight')
     return figs
+'''
 
 def backtrader_runner(df,strategy_name):
     cerebro = backtrader.Cerebro()
+    ## too much stake?
     cerebro.addsizer(backtrader.sizers.FixedSize, stake=1000)
 
     cerebro.broker.set_cash(1000000)
-    #data = backtrader.feeds.YahooFinanceCSVData(
-    #    dataname='data/GOOG.csv',plot=False)
+    #old_data = backtrader.feeds.YahooFinanceCSVData(
+    #    dataname='old_data/GOOG.csv',plot=False)
         # Do not pass values before this date
         #fromdate=datetime.datetime(2001, 10, 1),
         # Do not pass values after this date
@@ -66,4 +71,10 @@ def backtrader_runner(df,strategy_name):
     #print('Starting Portfolio Value: %.2f' % cerebro.broker.getvalue())
     cerebro.run()
     #print('Final Portfolio Value: %.2  f' % cerebro.broker.getvalue())
-    processPlots(cerebro,width=12, height=6, dpi=300)
+    # processPlots(cerebro,width=12, height=6, dpi=300)
+
+    b = Bokeh(plot_mode='single', output_mode='memory',scheme=Tradimo(show_headline = False))
+    model = cerebro.plot(b)
+    return model[0]
+
+

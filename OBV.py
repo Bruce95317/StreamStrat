@@ -3,13 +3,16 @@
 # Import library
 # import pandas as pd
 import numpy as np
-import matplotlib.pyplot as plt
+# import matplotlib.pyplot as plt
 from trader import backtrader_runner
 
-plt.style.use('fivethirtyeight')
+from bokeh.plotting import figure
+from bokeh.models import ColumnDataSource,HoverTool
 
-# Store the data
-#df = pd.read_csv('data/AMZN.csv')
+#plt.style.use('fivethirtyeight')
+
+# Store the old_data
+#df = pd.read_csv('old_data/AMZN.csv')
 # Set the date to be the index
 #df = df.set_index(pd.DatetimeIndex(df['Date'].values))
 
@@ -43,7 +46,7 @@ def buy_sell(signal, col1, col2):
     flag = -1
 
 
-# Loop through the length of the data set
+# Loop through the length of the old_data set
     for i in range(0, len(signal)):
         # If OBV > OBV_EMA Then Buy--> col1 =>'OBV' and col2 => 'OBV_EMA'
         if signal[col1][i] > signal[col2][i] and flag != 1:
@@ -67,7 +70,7 @@ def plot_OBV(data, stock_name):
     OBV = []
     OBV.append(0)
 
-    # Loop throught the data set (close proce) from the second row (index 1) to the end of the data set
+    # Loop throught the old_data set (close proce) from the second row (index 1) to the end of the old_data set
     for i in range(1, len(df.Close)):
         if df.Close[i] > df.Close[i-1]:
             OBV.append(OBV[-1]+df.Volume[i])
@@ -86,12 +89,15 @@ def plot_OBV(data, stock_name):
     df['Sell_Signal_Price'] = x[1]
 
     # put into backtrader
-    backtrader_runner(df,'OBV')
+    model = backtrader_runner(df,'OBV')
     # Plot the buy and sell prices
+
+    '''
 
     plot_obj = plt.figure(figsize=(12.2, 4.5))
     ax = plot_obj.gca()
-    ax.plot(df['Close'], label='Close', alpha=0.35)
+    ax.plot(df['Close'], label='Close Price', alpha=0.35)
+
     ax.scatter(df['Buy_Signal_Price'].dropna().index, df['Buy_Signal_Price'].dropna(),
                 label='Buy_signal', marker='^', alpha=1, color='green')
     ax.scatter(df['Sell_Signal_Price'].dropna().index, df['Sell_Signal_Price'].dropna(),
@@ -100,4 +106,33 @@ def plot_OBV(data, stock_name):
     ax.set_xlabel('Date', fontsize=18)
     ax.set_ylabel('Price USD', fontsize=18)
     ax.legend(loc='upper left')
-    return plot_obj
+    '''
+
+    source = ColumnDataSource(data=df)
+
+    p = figure(x_axis_type="datetime", plot_height=350)
+
+    p.line(x='index', y = 'Close',line_alpha=0.35, source=source,legend_label="Close Price",line_color = '#1f77b4',line_width = 4 )
+
+    buy_scatter = p.scatter(x = 'index',y = 'Buy_Signal_Price',marker="triangle",
+                            source=source,legend_label='Buy Signal',color='green',size=5)
+
+    sell_scatter = p.scatter(x = 'index' , y = 'Sell_Signal_Price', marker="inverted_triangle",
+                             source=source,legend_label='Sell Signal',color='red',size=5)
+
+    p.legend.location = "top_left"
+    p.title.text = stock_name + ' Close Price Buy and Sell Signals'
+    p.xaxis.axis_label = 'Date'
+    p.yaxis.axis_label = 'Close Price USD'
+
+    p.add_tools(
+        HoverTool(
+            tooltips=[('date','@index{%F}'),('close','$@Close{0.2f}') ],
+            formatters = {
+                     '@index': 'datetime'
+                 },
+            mode = "vline",
+            renderers = [buy_scatter, sell_scatter])
+    )
+
+    return p,model

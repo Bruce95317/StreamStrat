@@ -1,11 +1,14 @@
 #import pandas as pd
 import numpy as np
-import matplotlib.pyplot as plt
+# import matplotlib.pyplot as plt
 from trader import backtrader_runner
 
-plt.style.use('fivethirtyeight')
+from bokeh.plotting import figure
+from bokeh.models import ColumnDataSource,HoverTool
 
-#df = pd.read_csv('data/AMZN.csv')
+# plt.style.use('fivethirtyeight')
+
+#df = pd.read_csv('old_data/AMZN.csv')
 
 #df = df.set_index(pd.DatetimeIndex(df['Date'].values))
 
@@ -41,7 +44,7 @@ def DEMA_strategy(data):
     buy_list = []
     sell_list = []
     flag = False
-    # Loop through the data
+    # Loop through the old_data
     for i in range(0, len(data)):
         if data['DEMA_short'][i] > data['DEMA_long'][i] and flag == False:
             buy_list.append(data['Close'][i])
@@ -55,11 +58,11 @@ def DEMA_strategy(data):
             buy_list.append(np.nan)
             sell_list.append(np.nan)
 
-    # store buy and sell signal/lists into the data set
+    # store buy and sell signal/lists into the old_data set
     data['Buy'] = buy_list
     data['Sell'] = sell_list
 
-# Store the short term DEMA (20 day period) and the long term DEMA (50 day period) into the data set
+# Store the short term DEMA (20 day period) and the long term DEMA (50 day period) into the old_data set
 
 def plot_DEMA(data,stock_name):
     df = data.copy(deep=True)
@@ -72,10 +75,10 @@ def plot_DEMA(data,stock_name):
     DEMA_strategy(df)
 
     # put into backtrader
-    backtrader_runner(df,'DEMA')
+    model = backtrader_runner(df,'DEMA')
 
     # Visually show the stocks buy and sell signals
-
+    '''
     plot_obj = plt.figure(figsize=(12.2, 4.5))
     ax = plot_obj.gca()
     ax.scatter(df['Buy'].dropna().index, df['Buy'].dropna(), color='green',
@@ -89,4 +92,40 @@ def plot_DEMA(data,stock_name):
     ax.set_xlabel('Date', fontsize=18)
     ax.set_ylabel('Close Price ($)', fontsize=18)
     ax.legend(loc='upper left')
-    return plot_obj
+    '''
+
+    source = ColumnDataSource(data=df)
+
+    p = figure(x_axis_type="datetime",plot_height=350)
+
+    p.line(x='index', y='Close', line_alpha=0.35, source=source, legend_label="Close Price", line_color='#1f77b4',
+           line_width=4)
+
+    p.line(x='index', y='DEMA_short', line_alpha=0.35, source=source, legend_label='DEMA_short', line_color='#d62728',
+           line_width=4)
+
+    p.line(x='index', y='DEMA_long', line_alpha=0.35, source=source, legend_label='DEMA_long', line_color='#ff7f0e',
+           line_width=4)
+
+    buy_scatter = p.scatter(x='index', y='Buy', marker="triangle",
+                            source=source, legend_label='Buy Signal', color='green', size=5)
+
+    sell_scatter = p.scatter(x='index', y='Sell', marker="inverted_triangle",
+                             source=source, legend_label='Sell Signal', color='red', size=5)
+
+    p.legend.location = "top_left"
+    p.title.text = stock_name + ' Close Price Buy and Sell Signals'
+    p.xaxis.axis_label = 'Date'
+    p.yaxis.axis_label = 'Close Price USD'
+
+    p.add_tools(
+        HoverTool(
+            tooltips=[('date', '@index{%F}'), ('close', '$@Close{0.2f}')],
+            formatters={
+                '@index': 'datetime'
+            },
+            mode="vline",
+            renderers=[buy_scatter, sell_scatter])
+    )
+
+    return p,model
