@@ -7,7 +7,7 @@ from strategies.DEMA import TestDEMA,PandasDEMA
 from backtrader_plotting import Bokeh
 from backtrader_plotting.schemes import Tradimo
 
-'''
+"""
 def processPlots(cerebro, numfigs=1, iplot=True, start=None, end=None,
          width=16, height=9, dpi=300, use=None, **kwargs):
 
@@ -29,7 +29,7 @@ def processPlots(cerebro, numfigs=1, iplot=True, start=None, end=None,
         for si, strat in enumerate(stratlist):
             rfig = plotter.plot(strat, figid=si * 100,
                                 numfigs=numfigs, iplot=iplot,
-                                start=start, end=end, use=use)
+                                start=start, end=end, use=use,)
             figs.append(rfig)
 
         # this blocks code execution
@@ -41,7 +41,7 @@ def processPlots(cerebro, numfigs=1, iplot=True, start=None, end=None,
             f.set_dpi(dpi)
             f.savefig('broker_fig.png', bbox_inches='tight')
     return figs
-'''
+"""
 
 def backtrader_runner(df,strategy_name):
     cerebro = backtrader.Cerebro()
@@ -71,9 +71,9 @@ def backtrader_runner(df,strategy_name):
     #print('Starting Portfolio Value: %.2f' % cerebro.broker.getvalue())
     cerebro.run()
     #print('Final Portfolio Value: %.2  f' % cerebro.broker.getvalue())
-    # processPlots(cerebro,width=12, height=6, dpi=300)
+    #processPlots(cerebro,width=12, height=6, dpi=300,fmt_x_ticks = '%x',)
 
-    b = Bokeh(plot_mode='single', output_mode='memory',scheme=Tradimo(show_headline = False))
+    b = Bokeh(plot_mode='single', output_mode='memory',scheme=Tradimo(show_headline = False,plotaspectratio = 2.0))
     model = cerebro.plot(b)
     return model[0]
 
