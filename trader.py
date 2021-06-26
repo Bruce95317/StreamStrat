@@ -86,8 +86,6 @@ class TradeStat(backtrader.analyzers.TradeAnalyzer):
             return 0
         result1 = []
         result2 = []
-        total_profit = self.end_val-self.start_val
-        ret_rate = (self.end_val-self.start_val)/self.start_val
         total_close = 0
         for key,val in dict1.items():
             if key == 'total':
@@ -96,8 +94,10 @@ class TradeStat(backtrader.analyzers.TradeAnalyzer):
                 total_close = val['closed']
 
             elif key == 'pnl':
+                total_profit = val['gross']['total']
+                ret_rate = total_profit / self.start_val
                 temp1 = {'col': 'ALL TRADES', 'id1':'PROFIT','id2': 'total', 'val': "{:.4f}".format(total_profit)}
-                temp2 = {'col': 'ALL TRADES', 'id1':'PROFIT','id2': 'return rate', 'val': "{:.4%}".format(ret_rate) }
+                temp2 = {'col': 'ALL TRADES', 'id1':'PROFIT','id2': 'return rate', 'val': "{:.4%}".format(ret_rate)}
 
             elif key == 'won':
                 temp1 = {'col': 'TRADES WON', 'id1':'TRADE','id2': 'total', 'val': val['total']}
