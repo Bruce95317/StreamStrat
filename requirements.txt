@@ -23,6 +23,7 @@ colorama==0.4.4
 cycler==0.10.0
 decorator==4.4.2
 defusedxml==0.6.0
+dnspython==1.16.0
 entrypoints==0.3
 enum-compat==0.0.3
 gitdb==4.0.5
@@ -71,10 +72,12 @@ pycparser==2.20
 pydeck==0.5.0
 Pygments==2.7.4
 pylint==2.6.0
+pymongo==3.11.4
 pyparsing==2.4.7
 pyrsistent==0.17.3
 python-dateutil==2.8.1
 pytz==2020.5
+pywin32==301
 pywinpty==0.5.7
 PyYAML==5.4.1
 pyzmq==21.0.1
