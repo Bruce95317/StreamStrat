@@ -181,7 +181,7 @@ elif chosen_strategy == 'OBV':
     plot_obj,model,trade_stats = plot_OBV(df,symbol, stake ,cash)
 else:
     plot_obj,model,trade_stats = plot_SMA(df,symbol, stake ,cash)
-## handling case of no trade hapenne
+## handling case of no trade happened
 if trade_stats:
     st.bokeh_chart(plot_obj,use_container_width=True)
 
