@@ -1,3 +1,4 @@
+"""
 import requests
 from bs4 import BeautifulSoup as bs
 import yfinance as yf
@@ -20,6 +21,6 @@ for stock_name,company_name in zip(stock_names ,company_names):
 for stock_name in stock_names:
     data = yf.download(stock_name, start="2017-06-01", end="2021-06-01")
     data.to_csv(f'data/{stock_name}.csv',float_format='%.5f')
-
+"""
 
 

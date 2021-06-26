@@ -51,8 +51,8 @@ class TestDEMA(bt.Strategy):
 
         elif order.status in [order.Canceled, order.Margin, order.Rejected]:
             self.log('Order Canceled/Margin/Rejected')
-
-        # Write down: no pending order
+            #raise ValueError("maybe you don't have enough cash")
+            # Write down: no pending order
         self.order = None
 
     def next(self):

@@ -58,7 +58,7 @@ def buy_sell(data):
     return(sigPriceBuy, sigPriceSell)
 
 
-def plot_SMA(df,stock_name):
+def plot_SMA(df,stock_name,stake,cash):
 
     # Create the simple moving average with a 30 day window (30 MA)
     SMA30 = pd.DataFrame()
@@ -80,7 +80,7 @@ def plot_SMA(df,stock_name):
     data['Sell_Signal_Price'] = buy_sell1[1]
 
     # put into backtrader
-    model = backtrader_runner(data,'SMA')
+    model,trade_stats = backtrader_runner(data,'SMA',stake ,cash)
     '''
     plot_obj = plt.figure(figsize=(12.2, 4.5))
     ax = plot_obj.gca()
@@ -130,4 +130,4 @@ def plot_SMA(df,stock_name):
             renderers = [buy_scatter, sell_scatter])
     )
 
-    return p,model
+    return p,model,trade_stats

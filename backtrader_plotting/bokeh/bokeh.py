@@ -300,12 +300,13 @@ class Bokeh(metaclass=bt.MetaParams):
             tabs = self.generate_model_tabs(figurepage)
         else:
             tabs = []
-
+        '''
         # now append analyzer tab(s)
         analyzers = figurepage.analyzers
         panel_analyzer = self.get_analyzer_panel(analyzers)
         if panel_analyzer is not None:
             tabs.append(panel_analyzer)
+        '''
 
         model = Tabs(tabs=tabs)
 

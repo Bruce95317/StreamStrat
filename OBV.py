@@ -65,7 +65,7 @@ def buy_sell(signal, col1, col2):
 
     return(sigPriceBuy, sigPriceSell)
 
-def plot_OBV(data, stock_name):
+def plot_OBV(data, stock_name,stake,cash):
     df = data.copy(deep=True)
     # Calcualte the on Blaance Volume (OBV)
     OBV = []
@@ -90,7 +90,7 @@ def plot_OBV(data, stock_name):
     df['Sell_Signal_Price'] = x[1]
 
     # put into backtrader
-    model = backtrader_runner(df,'OBV')
+    model,trade_stats = backtrader_runner(df,'OBV',stake,cash)
     # Plot the buy and sell prices
 
     '''
@@ -136,4 +136,4 @@ def plot_OBV(data, stock_name):
             renderers = [buy_scatter, sell_scatter])
     )
 
-    return p,model
+    return p,model,trade_stats

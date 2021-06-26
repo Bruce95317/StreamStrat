@@ -64,7 +64,7 @@ def DEMA_strategy(data):
 
 # Store the short term DEMA (20 day period) and the long term DEMA (50 day period) into the data set
 
-def plot_DEMA(data,stock_name):
+def plot_DEMA(data,stock_name,stake,cash):
     df = data.copy(deep=True)
 
     df['DEMA_short'] = DEMA(df, 20, 'Close')
@@ -75,7 +75,7 @@ def plot_DEMA(data,stock_name):
     DEMA_strategy(df)
 
     # put into backtrader
-    model = backtrader_runner(df,'DEMA')
+    model,trade_stats = backtrader_runner(df,'DEMA',stake,cash)
 
     # Visually show the stocks buy and sell signals
     '''
@@ -128,4 +128,4 @@ def plot_DEMA(data,stock_name):
             renderers=[buy_scatter, sell_scatter])
     )
 
-    return p,model
+    return p,model,trade_stats
