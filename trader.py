@@ -101,15 +101,15 @@ class TradeStat(backtrader.analyzers.TradeAnalyzer):
 
             elif key == 'won':
                 temp1 = {'col': 'TRADES WON', 'id1':'TRADE','id2': 'total', 'val': val['total']}
-                temp2 = {'col': 'TRADES WON', 'id1':'TRADE','id2': '%', 'val': val['total']/total_close }
-                temp3 = {'col': 'TRADES WON', 'id1':'PROFIT','id2': 'total', 'val': val['pnl']['total']}
-                temp4 = {'col': 'TRADES WON', 'id1':'PROFIT','id2': 'max', 'val': val['pnl']['max']}
+                temp2 = {'col': 'TRADES WON', 'id1':'TRADE','id2': '%', 'val': "{:.4f}".format(val['total']/total_close )}
+                temp3 = {'col': 'TRADES WON', 'id1':'PROFIT','id2': 'total', 'val': "{:.4f}".format(val['pnl']['total'])}
+                temp4 = {'col': 'TRADES WON', 'id1':'PROFIT','id2': 'max', 'val': "{:.4f}".format(val['pnl']['max'])}
 
             elif key == 'lost':
                 temp1 = {'col': 'TRADES LOST', 'id1':'TRADE','id2': 'total', 'val': val['total']}
-                temp2 = {'col': 'TRADES LOST', 'id1':'TRADE','id2': '%', 'val': val['total']/total_close }
-                temp3 = {'col': 'TRADES LOST', 'id1':'PROFIT','id2': 'total', 'val': val['pnl']['total']}
-                temp4 = {'col': 'TRADES LOST', 'id1':'PROFIT','id2': 'max', 'val': val['pnl']['max']}
+                temp2 = {'col': 'TRADES LOST', 'id1':'TRADE','id2': '%', 'val': "{:.4f}".format(val['total']/total_close )}
+                temp3 = {'col': 'TRADES LOST', 'id1':'PROFIT','id2': 'total', 'val': "{:.4f}".format(val['pnl']['total'])}
+                temp4 = {'col': 'TRADES LOST', 'id1':'PROFIT','id2': 'max', 'val': "{:.4f}".format(val['pnl']['max'])}
             else:
                 continue
 

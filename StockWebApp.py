@@ -62,7 +62,7 @@ def get_input():
     selected_strategy = st.sidebar.selectbox('Chosen strategy', strategy_choices)
 
     stake = st.sidebar.slider('Stake', 100, 1000, 1000, 100)
-    cash = st.sidebar.slider('Cash', 100000, 1000000, 100000 , 100000)
+    cash = st.sidebar.slider('Cash (In Thousand USD)', 100, 1000, 100 , 100)*1000
 
     return start_date, end_date, stock_symbol, selected_strategy,stake ,cash
 
