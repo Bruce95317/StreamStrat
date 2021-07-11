@@ -39,6 +39,9 @@ screen = st.sidebar.selectbox(
     "View", ('Overview', 'Fundamentals', 'News', 'Ownership','Strategy'), index=1)
 st.title(screen)
 
+## for debug
+import os
+print(os.getcwd())
 with open('src/stock_names.json','r') as f :
     stock_dict = json.load(f)
 symbol = st.sidebar.selectbox("Stock Symbol",list(stock_dict.keys()))

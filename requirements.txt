@@ -5,7 +5,6 @@ astroid==2.4.2
 async-generator==1.10
 attrs==20.3.0
 autopep8==1.5.4
-azure-core==1.16.0
 backcall==0.2.0
 backtrader==1.9.76.123
 backtrader-plotting==1.1.0
