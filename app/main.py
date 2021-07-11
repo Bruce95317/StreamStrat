@@ -42,7 +42,14 @@ st.title(screen)
 with open('src/stock_names.json','r') as f :
     stock_dict = json.load(f)
 symbol = st.sidebar.selectbox("Stock Symbol",list(stock_dict.keys()))
-stock = IEXstock(os.environ["IEX_TOKEN"], symbol)
+
+failure = 1
+while(failure):
+    try:
+        stock = IEXstock(os.environ["IEX_TOKEN"], symbol)
+        failure = 0
+    except Exception as e:
+        pass
 
 if screen == 'Overview':
     collection = connectDB()
