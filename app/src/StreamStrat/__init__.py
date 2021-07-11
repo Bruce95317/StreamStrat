@@ -1,14 +1,13 @@
-import streamlit as st
 import os
-import pandas as pd
-import json
 import pymongo
+import streamlit as st
+import pandas as pd
 from PIL import Image
-from DEMA import plot_DEMA
-from OBV import plot_OBV
-from SMA import plot_SMA
-from iex_data_getter import IEXStock
+from ..iex import IEXstock
 from datetime import timedelta,date
+from .back_testing.DEMA import DoubleExponentialMovingAverage
+from .back_testing.OBV import OnBalanceVolume
+from .back_testing.SMA import SimpleMovingAverage
 # from config import mongo_connect_str,IEX_TOKEN
 
 
@@ -27,53 +26,21 @@ def datetime2str(time):
 #              'PLTR': 'Palantir Technologies Inc.', 'GME': 'GameStop Corp.', 'AMC': 'AMC Entertainment Holdings, Inc.',
 #              'BYND': 'Beyond Meat, Inc.', 'BB': 'BlackBerry Limited'}
 
-
-
-with open('stock_names.json','r') as f :
-    stock_dict = json.load(f)
-
-
 # ADD title and image
 today = date.today()
 threeYrsAgo = today - timedelta(days = 3*365)
-st.write(f"""
-# Stock Market Web Application 
-**Stock price data** , date range from {threeYrsAgo.strftime('%b %d, %Y')} to {today.strftime('%b %d, %Y')}
-""")
 
-
-image = Image.open(
-    "logodesign1.png")
-
-st.image(image, use_column_width=True)
-
-
-# ADD side bar header
-st.sidebar.header('User Input')
 
 # Create a function to get user input
-
-
 def get_input():
     start_date = st.sidebar.date_input("Start date", threeYrsAgo)
     end_date = st.sidebar.date_input("End date", today)
-    stock_symbol = st.sidebar.selectbox("Stock Symbol",list(stock_dict.keys()))
     strategy_choices = ('DEMA', 'OBV', 'SMA')
     selected_strategy = st.sidebar.selectbox('Chosen strategy', strategy_choices)
+    stake = st.sidebar.number_input('Stake', min_value=1, max_value=None, value= 1000)
+    cash = st.sidebar.number_input('Cash',  min_value=1, max_value=None, value= 100000 )
 
-    stake = st.sidebar.slider('Stake', 100, 1000, 1000, 100)
-    cash = st.sidebar.slider('Cash (In Thousand USD)', 100, 1000, 100 , 100)*1000
-
-    return start_date, end_date, stock_symbol, selected_strategy,stake ,cash
-
-# Create a function to get the company name
-
-
-def get_company_name(symbol):
-    if symbol in stock_dict.keys():
-        return stock_dict[symbol]
-    else:
-        'Not Available'
+    return start_date, end_date, selected_strategy, stake ,cash
 
 # Create a function to get the company price data and selected timeframe
 
@@ -109,20 +76,20 @@ def get_company_name(symbol):
 #    return df.iloc[start_row:end_row + 1, :]
 
 def get_data(symbol, start, end):
-    dbName = 'projectValHub'
+    dbName = 'projectValHubDB'
     colName = 'stockPriceData'
     dbConn = pymongo.MongoClient(os.environ["MONGO_URL"])
     db = dbConn[dbName]
     collection = db[colName]
-    ## index for sorting
-    collection.create_index(([("date_obj", 1)]))
+    # create index for query and sorting
+    #collection.create_index([('symbol', 1),("date_obj",1)])
 
     if collection.count_documents({'symbol':symbol}) >0:
         last = collection.find({'symbol':symbol},{ "_id": 0}).sort("date_obj", -1).limit(1)
         startNew = list(last)[0]['Date']
         delta1 = timedelta(days=3)
         if (pd.to_datetime(end)-pd.to_datetime(startNew)) > delta1:
-            stock = IEXStock(os.environ["IEX_TOKEN"], symbol)
+            stock = IEXstock(os.environ["IEX_TOKEN"], symbol)
             dict1 = stock.getOHLC(startNew, str(end))
             df = pd.DataFrame(dict1)
             df = df[['date', 'uclose', 'uhigh', 'ulow', 'uopen', 'fclose', 'uvolume','symbol']]
@@ -131,7 +98,7 @@ def get_data(symbol, start, end):
             df['date_obj'] = pd.to_datetime(df['Date'])
             collection.insert_many(df.to_dict('records'))
     else:
-        stock = IEXStock(os.environ["IEX_TOKEN"], symbol)
+        stock = IEXstock(os.environ["IEX_TOKEN"], symbol)
         ## get recent 2yrs data
         dict1 = stock.getOHLC(range = True)
         df = pd.DataFrame(dict1)
@@ -141,9 +108,8 @@ def get_data(symbol, start, end):
         df['date_obj'] = pd.to_datetime(df['Date'])
         collection.insert_many(df.to_dict('records'))
 
-
 def load_data(symbol, start, end):
-    dbName = 'projectValHub'
+    dbName = 'projectValHubDB'
     colName = 'stockPriceData'
     dbConn = pymongo.MongoClient(os.environ["MONGO_URL"])
     db = dbConn[dbName]
@@ -156,56 +122,75 @@ def load_data(symbol, start, end):
     df.index.name = 'index'
     return df
 
+def run(symbol,company_name):
+    st.write(f"""
+    ## Stock Market Web Application 
+    **Stock price data** , date range from {threeYrsAgo.strftime('%b %d, %Y')} to {today.strftime('%b %d, %Y')}
+    """)
 
-# Set the index to be the date
-start, end, symbol , chosen_strategy, stake ,cash = get_input()
-# download the data
-get_data(symbol, start, end)
-## get data from db
-df = load_data(symbol, start, end)
-# Get the company name
-company_name = get_company_name(symbol)
+    image = Image.open("src/logodesign1.png")
 
+    st.image(image, use_column_width=True)
 
-# Display the close prices
-st.header(company_name+" Close Price\n")
-st.line_chart(df['Close'])
+    # ADD side bar header
+    st.sidebar.header('User Input')
 
-# Display the volume
-st.header(company_name+" Volume\n")
-st.line_chart(df['Volume'])
+    # Set the index to be the date
+    start, end, chosen_strategy, stake ,cash = get_input()
+    # download the data
+    get_data(symbol, start, end)
+    ## get data from db
+    df = load_data(symbol, start, end)
 
-if chosen_strategy == 'DEMA':
-    plot_obj,model,trade_stats = plot_DEMA(df,symbol, stake ,cash)
-elif chosen_strategy == 'OBV':
-    plot_obj,model,trade_stats = plot_OBV(df,symbol, stake ,cash)
-else:
-    plot_obj,model,trade_stats = plot_SMA(df,symbol, stake ,cash)
-## handling case of no trade happened
-if trade_stats:
-    st.bokeh_chart(plot_obj,use_container_width=True)
+    # Display the close prices
+    st.header(company_name+" Close Price\n")
+    st.line_chart(df['Close'])
 
-    #broker_fig = Image.open("broker_fig.png")
-    #st.image(broker_fig, use_column_width=True)
-    st.bokeh_chart(model,use_container_width=True)
+    # Display the volume
+    st.header(company_name+" Volume\n")
+    st.line_chart(df['Volume'])
 
-    ## create trade stats table
-    st.header('Trades Statistics')
-    df_stats1 = pd.DataFrame(trade_stats['result1'])
-    df_stats2 = pd.DataFrame(trade_stats['result2'])
+    if chosen_strategy == 'DEMA':
+        dema = DoubleExponentialMovingAverage(df,symbol,stake,cash)
+        dema.run()
+        plot_obj = dema.plotBuySell()
+        tradeResultPlot,tradeStats = dema.plotBackTesting()
+    elif chosen_strategy == 'OBV':
+        obv = OnBalanceVolume(df, symbol, stake, cash)
+        obv.run()
+        plot_obj = obv.plotBuySell()
+        tradeResultPlot, tradeStats = obv.plotBackTesting()
+    else:
+        sma = SimpleMovingAverage(df, symbol, stake, cash)
+        sma.run()
+        plot_obj = sma.plotBuySell()
+        tradeResultPlot, tradeStats = sma.plotBackTesting()
 
-    table1 = df_stats1.pivot(index=['id1', 'id2'], columns='col', values='val')
-    table2 = df_stats2.pivot(index=['id1', 'id2'], columns='col', values='val')
-    table1.sort_values(by='id1', ascending=False, kind='heapsort', inplace=True)
-    table2.sort_values(by='id1', ascending=False, kind='heapsort', inplace=True)
-    col1, col2 = st.beta_columns(2)
-    with col1:
-        st.table(table1)
-    with col2:
-        st.table(table2)
-else:
-    st.bokeh_chart(plot_obj,use_container_width=True)
-    st.markdown("<h3 style='text-align: center;'><strong>No Trade Happened.</strong></h3>", unsafe_allow_html=True)
+    ## handling case of no trade happened
+    if tradeStats:
+        st.bokeh_chart(plot_obj,use_container_width=True)
+
+        #broker_fig = Image.open("broker_fig.png")
+        #st.image(broker_fig, use_column_width=True)
+        st.bokeh_chart(tradeResultPlot,use_container_width=True)
+
+        ## create trade stats table
+        st.header('Trades Statistics')
+        df_stats1 = pd.DataFrame(tradeStats['result1'])
+        df_stats2 = pd.DataFrame(tradeStats['result2'])
+
+        table1 = df_stats1.pivot(index=['id1', 'id2'], columns='col', values='val')
+        table2 = df_stats2.pivot(index=['id1', 'id2'], columns='col', values='val')
+        table1.sort_values(by='id1', ascending=False, kind='heapsort', inplace=True)
+        table2.sort_values(by='id1', ascending=False, kind='heapsort', inplace=True)
+        col1, col2 = st.beta_columns(2)
+        with col1:
+            st.table(table1)
+        with col2:
+            st.table(table2)
+    else:
+        st.bokeh_chart(plot_obj,use_container_width=True)
+        st.markdown("<h3 style='text-align: center;'><strong>No Closed Trade Happened.</strong></h3>", unsafe_allow_html=True)
 
 # Get statistics on the data
 #st.header('Data Statistics')
