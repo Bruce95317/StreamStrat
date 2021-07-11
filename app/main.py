@@ -2,6 +2,7 @@ import streamlit as st
 import pymongo
 import os
 import json
+import logging
 from src.iex import IEXstock
 from datetime import datetime, timedelta, timezone
 
@@ -39,9 +40,7 @@ screen = st.sidebar.selectbox(
     "View", ('Overview', 'Fundamentals', 'News', 'Ownership','Strategy'), index=1)
 st.title(screen)
 
-## for debug
-import logging
-logging.info(os.getcwd())
+#logging.info(os.getcwd())
 ## get this file location
 dir = os.path.dirname(__file__)
 filename = os.path.join(dir,'src','stock_names.json')
@@ -55,7 +54,7 @@ while(failure):
         stock = IEXstock(os.environ["IEX_TOKEN"], symbol)
         failure = 0
     except Exception as e:
-        pass
+        logging.info(e)
 
 if screen == 'Overview':
     collection = connectDB()
@@ -63,9 +62,9 @@ if screen == 'Overview':
     cached_logo = collection.find_one({'cache_key':logo_cache_key},{ "_id": 0,'cache_key':0,'expireAt':0})
 
     if cached_logo is not None:
-        print("found logo in cache")
+        logging.info("found logo in cache")
     else:
-        print("getting logo from api, and then storing it in cache")
+        logging.info("getting logo from api, and then storing it in cache")
         cached_logo = create_cache(stock.get_logo(),logo_cache_key)
         collection.insert_one(cached_logo)
     logo = cached_logo['data']
@@ -74,9 +73,9 @@ if screen == 'Overview':
     cached_company_info = collection.find_one({'cache_key':company_cache_key},{ "_id": 0,'cache_key':0,'expireAt':0})
 
     if cached_company_info is not None:
-        print("found company news in cache")
+        logging.info("found company news in cache")
     else:
-        print("getting company from api, and then storing it in cache")
+        logging.info("getting company from api, and then storing it in cache")
         cached_company_info = create_cache(stock.get_company_info(),company_cache_key)
         collection.insert_one(cached_company_info)
 
@@ -101,7 +100,7 @@ if screen == 'News':
     cached_news = collection.find_one({'cache_key': news_cache_key}, {"_id": 0,'cache_key':0,'expireAt':0})
 
     if cached_news is not None:
-        print("found news in cache")
+        logging.info("found news in cache")
     else:
         cached_news = create_cache(stock.get_company_news(),news_cache_key)
         collection.insert_one(cached_news)
@@ -125,7 +124,7 @@ if screen == 'Fundamentals':
         cached_stats = create_cache(stock.get_stats(),stats_cache_key)
         collection.insert_one(cached_stats)
     else:
-        print("found stats in cache")
+        logging.info("found stats in cache")
 
     stats = cached_stats['data']
 
@@ -163,7 +162,7 @@ if screen == 'Fundamentals':
         cached_fundamentals = create_cache(stock.get_fundamentals('quarterly'),fundamentals_cache_key)
         collection.insert_one(cached_fundamentals)
     else:
-        print("found fundamentals in cache")
+        logging.info("found fundamentals in cache")
 
     fundamentals = cached_fundamentals['data']
 
@@ -186,7 +185,7 @@ if screen == 'Fundamentals':
         cached_dividends = create_cache(stock.get_dividends(),dividends_cache_key)
         collection.insert_one(cached_dividends)
     else:
-        print("found dividends in cache")
+        logging.info("found dividends in cache")
 
     dividends = cached_dividends['data']
 
@@ -206,7 +205,7 @@ if screen == 'Ownership':
         collection.insert_one(cached_institutional_ownership)
 
     else:
-        print("getting inst ownership from cache")
+        logging.info("getting inst ownership from cache")
 
     institutional_ownership = cached_institutional_ownership['data']
     for institution in institutional_ownership:
@@ -224,7 +223,7 @@ if screen == 'Ownership':
         collection.insert_one(cached_insider_transactions)
 
     else:
-        print("getting insider transactions from cache")
+        logging.info("getting insider transactions from cache")
 
     insider_transactions = cached_insider_transactions['data']
 
