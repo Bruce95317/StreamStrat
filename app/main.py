@@ -41,10 +41,11 @@ st.title(screen)
 
 ## for debug
 import os
-print(os.getcwd())
-#with open('src/stock_names.json','r') as f :
-#    stock_dict = json.load(f)
-#symbol = st.sidebar.selectbox("Stock Symbol",list(stock_dict.keys()))
+import logging
+logging.info(os.getcwd())
+with open('src/stock_names.json','r') as f :
+    stock_dict = json.load(f)
+symbol = st.sidebar.selectbox("Stock Symbol",list(stock_dict.keys()))
 
 failure = 1
 while(failure):
