@@ -43,7 +43,7 @@ st.title(screen)
 import logging
 logging.info(os.getcwd())
 ## get this file location
-dir = os.getcwd()
+dir = os.path.dirname(__file__)
 filename = os.path.join(dir,'src','stock_names.json')
 with open(filename) as f :
     stock_dict = json.load(f)
