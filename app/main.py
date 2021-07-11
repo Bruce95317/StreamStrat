@@ -187,6 +187,7 @@ if screen == 'Fundamentals':
     else:
         logging.info("found dividends in cache")
 
+
     dividends = cached_dividends['data']
 
     for dividend in dividends:
