@@ -127,8 +127,9 @@ def run(symbol,company_name):
     ## Stock Market Web Application 
     **Stock price data** , date range from {threeYrsAgo.strftime('%b %d, %Y')} to {today.strftime('%b %d, %Y')}
     """)
-
-    image = Image.open("src/logodesign1.png")
+    dir = os.getcwd()
+    filename = os.path.join(dir, 'src', 'logodesign1.png')
+    image = Image.open(filename)
 
     st.image(image, use_column_width=True)
 
