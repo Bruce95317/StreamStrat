@@ -1,0 +1,7 @@
+windows
+#
+
+.\stockweb\Scripts\activate
+streamlit run "C:/Users/user/Desktop/stock webapp/StockWebApp.py"
+
+
