@@ -150,8 +150,8 @@ class TradeStat(bt.analyzers.TradeAnalyzer):
         total_close = 0
         for key,val in dict1.items():
             if key == 'total':
-                temp1 = {'col':'ALL TRADES','id1':'TRADE','id2':'total','val':val['total']}
-                temp2 = {'col':'ALL TRADES','id1':'TRADE','id2':'closed','val':val['closed']}
+                temp1 = {'col':'ALL TRADES','id1':'TRADE','id2':'total','val':str(val['total'])}
+                temp2 = {'col':'ALL TRADES','id1':'TRADE','id2':'closed','val':str(val['closed'])}
                 total_close = val['closed']
 
             elif key == 'pnl':
@@ -161,13 +161,13 @@ class TradeStat(bt.analyzers.TradeAnalyzer):
                 temp2 = {'col': 'ALL TRADES', 'id1':'PROFIT','id2': 'return rate', 'val': "{:.4%}".format(ret_rate)}
 
             elif key == 'won':
-                temp1 = {'col': 'TRADES WON', 'id1':'TRADE','id2': 'total', 'val': val['total']}
+                temp1 = {'col': 'TRADES WON', 'id1':'TRADE','id2': 'total', 'val': str(val['total'])}
                 temp2 = {'col': 'TRADES WON', 'id1':'TRADE','id2': '%', 'val': "{:.4f}".format(val['total']/total_close )}
                 temp3 = {'col': 'TRADES WON', 'id1':'PROFIT','id2': 'total', 'val': "{:.4f}".format(val['pnl']['total'])}
                 temp4 = {'col': 'TRADES WON', 'id1':'PROFIT','id2': 'max', 'val': "{:.4f}".format(val['pnl']['max'])}
 
             elif key == 'lost':
-                temp1 = {'col': 'TRADES LOST', 'id1':'TRADE','id2': 'total', 'val': val['total']}
+                temp1 = {'col': 'TRADES LOST', 'id1':'TRADE','id2': 'total', 'val': str(val['total'])}
                 temp2 = {'col': 'TRADES LOST', 'id1':'TRADE','id2': '%', 'val': "{:.4f}".format(val['total']/total_close )}
                 temp3 = {'col': 'TRADES LOST', 'id1':'PROFIT','id2': 'total', 'val': "{:.4f}".format(val['pnl']['total'])}
                 temp4 = {'col': 'TRADES LOST', 'id1':'PROFIT','id2': 'max', 'val': "{:.4f}".format(val['pnl']['max'])}

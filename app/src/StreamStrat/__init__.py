@@ -2,7 +2,6 @@ import os
 import pymongo
 import streamlit as st
 import pandas as pd
-from PIL import Image
 from ..iex import IEXstock
 from ..quandl import QuandlStock
 from datetime import timedelta,date
