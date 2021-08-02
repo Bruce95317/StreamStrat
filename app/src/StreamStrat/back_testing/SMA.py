@@ -52,10 +52,10 @@ class SimpleMovingAverage:
                 sigPriceSell.append(np.nan)
 
         # Store the buy and sell data into a variable
-        self.data['Buy_Signal_Price'] = sigPriceBuy
-        self.data['Sell_Signal_Price'] = sigPriceSell
+        self.data['Buy'] = sigPriceBuy
+        self.data['Sell'] = sigPriceSell
 
-    def plotBuySell(self):
+    def plotBuySell(self,stock_market_option):
 
         source = ColumnDataSource(data=self.data)
 
@@ -70,16 +70,16 @@ class SimpleMovingAverage:
         p.line(x='index', y='SMA100', line_alpha=0.35, source=source, legend_label='SMA100', line_color='#ff7f0e',
                line_width=4)
 
-        buy_scatter = p.scatter(x='index', y='Buy_Signal_Price', marker="triangle",
+        buy_scatter = p.scatter(x='index', y='Buy', marker="triangle",
                                 source=source, legend_label='Buy Signal', color='green', size=5)
 
-        sell_scatter = p.scatter(x='index', y='Sell_Signal_Price', marker="inverted_triangle",
+        sell_scatter = p.scatter(x='index', y='Sell', marker="inverted_triangle",
                                  source=source, legend_label='Sell Signal', color='red', size=5)
 
         p.legend.location = "top_left"
         p.title.text = self.symbol + ' Close Price Buy and Sell Signals'
         p.xaxis.axis_label = 'Date'
-        p.yaxis.axis_label = 'Close Price USD'
+        p.yaxis.axis_label = f'Close Price {stock_market_option}D'
 
         p.add_tools(
             HoverTool(

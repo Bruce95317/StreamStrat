@@ -36,25 +36,45 @@ def connectDB():
 
 ## client = redis.Redis(host="localhost", port=6379)
 
-screen = st.sidebar.selectbox(
-    "View", ('Overview', 'Fundamentals', 'News', 'Ownership','Strategy'), index=1)
-st.title(screen)
+
 
 #logging.info(os.getcwd())
 ## get this file location
 dir = os.path.dirname(__file__)
-filename = os.path.join(dir,'src','stock_names.json')
-with open(filename) as f :
-    stock_dict = json.load(f)
-symbol = st.sidebar.selectbox("Stock Symbol",list(stock_dict.keys()))
 
-failure = 1
-while(failure):
-    try:
-        stock = IEXstock(os.environ["IEX_TOKEN"], symbol)
-        failure = 0
-    except Exception as e:
-        logging.info(e)
+stock_market_option = st.sidebar.radio('Stock Market',('US', 'HK'))
+
+if stock_market_option == 'US':
+
+    filename = os.path.join(dir, 'src', 'stock_names.json')
+    with open(filename) as f:
+        stock_dict = json.load(f)
+
+    screen = st.sidebar.selectbox(
+        "View", ('Overview', 'Fundamentals', 'News', 'Ownership','Strategy'), index=1)
+    st.title(screen)
+
+    symbol = st.sidebar.selectbox("Stock Symbol",list(stock_dict.keys()))
+
+    failure = 1
+    while (failure):
+        try:
+            stock = IEXstock(os.environ["IEX_TOKEN"], symbol)
+            failure = 0
+        except Exception as e:
+            logging.info(e)
+else:
+    filename = os.path.join(dir, 'src', 'hk_stock_name.json')
+    with open(filename) as f:
+        stock_dict = json.load(f)
+
+    screen = st.sidebar.selectbox(
+        "View", ('','Strategy'), index=0)
+    st.title(screen)
+
+    symbol = st.sidebar.selectbox("Stock Symbol",list(stock_dict.keys()))
+
+
 
 if screen == 'Overview':
     collection = connectDB()
@@ -236,5 +256,5 @@ if screen == 'Ownership':
 
 if screen == 'Strategy':
     from src.StreamStrat import run
-    run(symbol,get_company_name(symbol))
+    run(stock_market_option,symbol,get_company_name(symbol))
 

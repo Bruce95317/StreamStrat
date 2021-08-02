@@ -2,7 +2,7 @@ import backtrader as bt
 import math
 #import datetime
 #from strategies.strategy import TestStrategy
-from .pandasDataLoader import PandasDEMA,PandasOBV,PandasSMA
+from .pandasDataLoader import PandasDEMA,PandasOBV,PandasSMA,PandasFibonacci
 from backtrader_plotting import Bokeh
 from backtrader_plotting.schemes import Tradimo
 
@@ -94,14 +94,14 @@ class TestStrategy(bt.Strategy):
                 self.log('BUY CREATE, %.2f' % self.dataclose[0])
 
                 # Keep track of the created order to avoid a 2nd order
-                self.order = self.buy()
+                self.order = self.buy(exectype=bt.Order.Close)
         else:
             if not(math.isnan(self.sell_signal[0])):
                 # SELL, SELL, SELL!!! (with all possible default parameters)
                 self.log('SELL CREATE, %.2f' % self.dataclose[0])
 
                 # Keep track of the created order to avoid a 2nd order
-                self.order = self.sell()
+                self.order = self.sell(exectype=bt.Order.Close)
 
 
 class TradeStat(bt.analyzers.TradeAnalyzer):
@@ -207,6 +207,9 @@ def backtrader_runner(df,strategy_name,stake,cash):
         cerebro.addstrategy(TestStrategy)
     elif strategy_name == 'DEMA':
         data = PandasDEMA(dataname = df,plot = False)
+        cerebro.addstrategy(TestStrategy)
+    elif strategy_name == 'Fibonacci':
+        data = PandasFibonacci(dataname = df,plot = False)
         cerebro.addstrategy(TestStrategy)
 
     cerebro.adddata(data)

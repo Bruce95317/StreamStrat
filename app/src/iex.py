@@ -63,7 +63,7 @@ class IEXstock:
         return r.json()
 
     ## getting the historical data from now
-    def getOHLC(self,start = None ,end = None,range = False):
+    def getOHLC(self,start = None ,end = None,range = True):
         if range:
             url = f"{self.BASE_URL}/time-series/HISTORICAL_PRICES/{self.symbol}?range=3y&sort=ASC&token={self.token}"
             r = requests.get(url)

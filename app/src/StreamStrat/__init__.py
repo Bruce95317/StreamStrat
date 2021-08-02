@@ -4,16 +4,40 @@ import streamlit as st
 import pandas as pd
 from PIL import Image
 from ..iex import IEXstock
+from ..quandl import QuandlStock
 from datetime import timedelta,date
 from .back_testing.DEMA import DoubleExponentialMovingAverage
 from .back_testing.OBV import OnBalanceVolume
 from .back_testing.SMA import SimpleMovingAverage
+from .back_testing.fibonacci import FibonacciRetracementLevels
 # from config import mongo_connect_str,IEX_TOKEN
 
 
 ##helper function
 def datetime2str(time):
     return time.strftime('%Y-%m-%d')
+
+def process_iex_data(dict1):
+    df = pd.DataFrame(dict1)
+    df = df[['date', 'uclose', 'uhigh', 'ulow', 'uopen', 'fclose', 'uvolume', 'symbol']]
+    df['date'] = pd.to_datetime(df['date'], unit='ms').apply(datetime2str)
+    df.set_axis(['Date', 'Open', 'High', 'Low', 'Close', 'Adj Close', 'Volume', 'symbol'], axis='columns', inplace=True)
+    df['date_obj'] = pd.to_datetime(df['Date'])
+    return df
+
+def process_quandl_data(symbol,list2d):
+    ## supress warning
+    pd.options.mode.chained_assignment = None
+
+    data = pd.DataFrame(list2d)
+    df = data[[0, 7, 8, 1, 9, 10]]
+    df.set_axis(['Date', 'High', 'Low', 'Close', 'Previous Close', 'Volume'], axis='columns', inplace=True)
+    df["Volume"] = df["Volume"] * 1000
+    df['Date'] = pd.to_datetime(df['Date'])
+    df['date_obj'] = pd.to_datetime(df['Date'])
+    df["symbol"] = symbol
+    return df
+
 
 #stock_dict = {'AAPL': 'Apple Inc.', 'MSFT': 'Microsoft Corporation', 'AMZN': 'Amazon.com, Inc.',
 #              'GOOG': 'Alphabet Inc.', 'FB': 'Facebook, Inc.', 'TSLA': 'Tesla, Inc.',
@@ -32,10 +56,13 @@ threeYrsAgo = today - timedelta(days = 3*365)
 
 
 # Create a function to get user input
-def get_input():
+def get_input(stock_market_option):
     start_date = st.sidebar.date_input("Start date", threeYrsAgo)
     end_date = st.sidebar.date_input("End date", today)
-    strategy_choices = ('DEMA', 'OBV', 'SMA')
+    if stock_market_option == "US":
+        strategy_choices = ('DEMA', 'OBV', 'SMA','Fibonacci')
+    else:
+        strategy_choices = ('DEMA', 'OBV', 'Fibonacci')
     selected_strategy = st.sidebar.selectbox('Chosen strategy', strategy_choices)
     stake = st.sidebar.number_input('Stake', min_value=1, max_value=None, value= 1000)
     cash = st.sidebar.number_input('Cash',  min_value=1, max_value=None, value= 100000 )
@@ -75,9 +102,11 @@ def get_input():
 
 #    return df.iloc[start_row:end_row + 1, :]
 
-def get_data(symbol, start, end):
+def get_data(stock_market_option,symbol, start, end):
     dbName = 'projectValHubDB'
-    colName = 'stockPriceData'
+    if stock_market_option == "US": colName = 'stockPriceData'
+    else: colName = 'hkStockPriceData'
+
     dbConn = pymongo.MongoClient(os.environ["MONGO_URL"])
     db = dbConn[dbName]
     collection = db[colName]
@@ -88,29 +117,38 @@ def get_data(symbol, start, end):
         last = collection.find({'symbol':symbol},{ "_id": 0}).sort("date_obj", -1).limit(1)
         startNew = list(last)[0]['Date']
         delta1 = timedelta(days=3)
-        if (pd.to_datetime(end)-pd.to_datetime(startNew)) > delta1:
+        if (pd.to_datetime(end)-pd.to_datetime(startNew)) > delta1 and stock_market_option == "US" :
             stock = IEXstock(os.environ["IEX_TOKEN"], symbol)
             dict1 = stock.getOHLC(startNew, str(end))
-            df = pd.DataFrame(dict1)
-            df = df[['date', 'uclose', 'uhigh', 'ulow', 'uopen', 'fclose', 'uvolume','symbol']]
-            df['date'] = pd.to_datetime(df['date'], unit='ms').apply(datetime2str)
-            df.set_axis(['Date', 'Open', 'High', 'Low', 'Close', 'Adj Close', 'Volume','symbol'], axis='columns', inplace=True)
-            df['date_obj'] = pd.to_datetime(df['Date'])
+            df = process_iex_data(dict1)
             collection.insert_many(df.to_dict('records'))
-    else:
-        stock = IEXstock(os.environ["IEX_TOKEN"], symbol)
-        ## get recent 2yrs data
-        dict1 = stock.getOHLC(range = True)
-        df = pd.DataFrame(dict1)
-        df = df[['date', 'uclose', 'uhigh', 'ulow', 'uopen', 'fclose', 'uvolume','symbol']]
-        df['date'] = pd.to_datetime(df['date'], unit='ms').apply(datetime2str)
-        df.set_axis(['Date', 'Open', 'High', 'Low', 'Close', 'Adj Close', 'Volume','symbol'], axis='columns', inplace=True)
-        df['date_obj'] = pd.to_datetime(df['Date'])
-        collection.insert_many(df.to_dict('records'))
 
-def load_data(symbol, start, end):
+        elif(pd.to_datetime(end)-pd.to_datetime(startNew)) > delta1 and stock_market_option == "HK":
+            stock = QuandlStock(os.environ["QUANDL_TOKEN"], symbol)
+            list2d = stock.get_stock_price(startNew, str(end))
+            df = process_quandl_data(symbol,list2d)
+            collection.insert_many(df.to_dict('records'))
+
+    else:
+        if stock_market_option == "US":
+            stock = IEXstock(os.environ["IEX_TOKEN"], symbol)
+            ## get recent 2yrs data
+            dict1 = stock.getOHLC(range = True)
+            df = process_iex_data(dict1)
+            collection.insert_many(df.to_dict('records'))
+        else:
+            stock = QuandlStock(os.environ["QUANDL_TOKEN"], symbol)
+            list2d = stock.get_stock_price(str(threeYrsAgo), str(today))
+            df = process_quandl_data(symbol,list2d)
+            collection.insert_many(df.to_dict('records'))
+
+
+def load_data(stock_market_option,symbol, start, end):
     dbName = 'projectValHubDB'
-    colName = 'stockPriceData'
+
+    if stock_market_option == "US": colName = 'stockPriceData'
+    else: colName = 'hkStockPriceData'
+
     dbConn = pymongo.MongoClient(os.environ["MONGO_URL"])
     db = dbConn[dbName]
     collection = db[colName]
@@ -122,26 +160,21 @@ def load_data(symbol, start, end):
     df.index.name = 'index'
     return df
 
-def run(symbol,company_name):
+def run(stock_market_option,symbol,company_name):
     st.write(f"""
     ## Stock Market Web Application 
     **Stock price data** , date range from {threeYrsAgo.strftime('%b %d, %Y')} to {today.strftime('%b %d, %Y')}
     """)
-    dir = os.path.dirname(__file__)
-    filename = os.path.join(os.path.split(dir)[0],'logodesign1.png')
-    image = Image.open(filename)
-
-    st.image(image, use_column_width=True)
 
     # ADD side bar header
     st.sidebar.header('User Input')
 
     # Set the index to be the date
-    start, end, chosen_strategy, stake ,cash = get_input()
+    start, end, chosen_strategy, stake ,cash = get_input(stock_market_option)
     # download the data
-    get_data(symbol, start, end)
+    get_data(stock_market_option,symbol, start, end)
     ## get data from db
-    df = load_data(symbol, start, end)
+    df = load_data(stock_market_option, symbol, start, end)
 
     # Display the close prices
     st.header(company_name+" Close Price\n")
@@ -154,18 +187,23 @@ def run(symbol,company_name):
     if chosen_strategy == 'DEMA':
         dema = DoubleExponentialMovingAverage(df,symbol,stake,cash)
         dema.run()
-        plot_obj = dema.plotBuySell()
+        plot_obj = dema.plotBuySell(stock_market_option)
         tradeResultPlot,tradeStats = dema.plotBackTesting()
     elif chosen_strategy == 'OBV':
         obv = OnBalanceVolume(df, symbol, stake, cash)
         obv.run()
-        plot_obj = obv.plotBuySell()
+        plot_obj = obv.plotBuySell(stock_market_option)
         tradeResultPlot, tradeStats = obv.plotBackTesting()
-    else:
+    elif chosen_strategy == 'SMA':
         sma = SimpleMovingAverage(df, symbol, stake, cash)
         sma.run()
-        plot_obj = sma.plotBuySell()
+        plot_obj = sma.plotBuySell(stock_market_option)
         tradeResultPlot, tradeStats = sma.plotBackTesting()
+    elif chosen_strategy == 'Fibonacci':
+        fibonacci = FibonacciRetracementLevels(df, symbol, stake, cash)
+        fibonacci.run()
+        plot_obj = fibonacci.plotBuySell(stock_market_option)
+        tradeResultPlot, tradeStats = fibonacci.plotBackTesting()
 
     ## handling case of no trade happened
     if tradeStats:

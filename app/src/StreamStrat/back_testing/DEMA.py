@@ -43,7 +43,7 @@ class DoubleExponentialMovingAverage:
         self.data['Buy'] = buy_list
         self.data['Sell'] = sell_list
 
-    def plotBuySell(self):
+    def plotBuySell(self,stock_market_option):
         source = ColumnDataSource(data=self.data)
 
         p = figure(x_axis_type="datetime", plot_height=350)
@@ -67,7 +67,7 @@ class DoubleExponentialMovingAverage:
         p.legend.location = "top_left"
         p.title.text = self.symbol + ' Close Price Buy and Sell Signals'
         p.xaxis.axis_label = 'Date'
-        p.yaxis.axis_label = 'Close Price USD'
+        p.yaxis.axis_label = f'Close Price {stock_market_option}D'
 
         p.add_tools(
             HoverTool(
