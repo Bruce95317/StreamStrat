@@ -6,3 +6,4 @@ pandas
 pymongo[srv]
 requests
 streamlit
+matplotlib
