@@ -1,10 +1,11 @@
 backtrader
 backtrader_plotting
 bokeh==2.2.2
+markdown2
+nltk
 numpy
+openpyxl
 pandas
 pymongo[srv]
 requests
 streamlit
-openpyxl
-nltk
