@@ -6,3 +6,5 @@ pandas
 pymongo[srv]
 requests
 streamlit
+openpyxl
+nltk

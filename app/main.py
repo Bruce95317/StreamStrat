@@ -1,47 +1,50 @@
 import streamlit as st
-import pymongo
+import pandas as pd
 import os
 import json
 import logging
 from src.iex import IEXstock
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, date, timedelta
+from src.database.mongoDB import StockFundaDB
 
 # helper function
-
-
 def format_number(num):
     return f"{num:,}"
 
 # Create a function to get the company name
-
-
 def get_company_name(symbol):
     if symbol in stock_dict.keys():
         return stock_dict[symbol]
 
 
-def create_cache(data, key):
-    cached_obj = dict()
-    cached_obj['data'] = data
-    cached_obj['cache_key'] = key
-    cached_obj['expireAt'] = datetime.now(timezone.utc) + timedelta(hours=24)
-    return cached_obj
+def createSentimentScore(news):
+    """
+    Pass each news into vader model,calculate their compound score
+    :return: data frame for each news for its compound score
+    """
+    import nltk
+    nltk.download("vader_lexicon")
+    from nltk.sentiment.vader import SentimentIntensityAnalyzer
 
+    sid = SentimentIntensityAnalyzer()
 
-def connectDB():
-    dbName = 'projectValHubDB'
-    colName = 'stockFundaData'
-    dbConn = pymongo.MongoClient(os.environ["MONGO_URL"])
-    db = dbConn[dbName]
-    collection = db[colName]
-    # create index for query and auto expire
-    collection.create_index([('cache_key', 1)])
-    collection.create_index([('expireAt', 1)], expireAfterSeconds=0)
-    return collection
+    resultScores = []
+    newsHeadline = []
+    newsDate = []
+
+    for article in news:
+        summary = article['summary'] if article['summary'] != "No summary available." else ""
+        headline = article['headline']
+        date = str(datetime.utcfromtimestamp(article['datetime']/1000).date())
+        text = headline + " " + summary
+        resultScores.append(sid.polarity_scores(text)["compound"])
+        newsHeadline.append(headline)
+        newsDate.append(date)
+    result = pd.DataFrame({"date": newsDate,"headline": newsHeadline,"score": resultScores})
+    return result
 
 
 # client = redis.Redis(host="localhost", port=6379)
-
 
 # logging.info(os.getcwd())
 # get this file location
@@ -80,59 +83,71 @@ else:
     symbol = st.sidebar.selectbox("Stock Symbol", list(stock_dict.keys()))
 
 if screen == 'Overview':
-    collection = connectDB()
-    logo_cache_key = f"{symbol}_logo"
-    cached_logo = collection.find_one({'cache_key': logo_cache_key}, {
-                                      "_id": 0, 'cache_key': 0, 'expireAt': 0})
+    fundaDB = StockFundaDB('projectValHubDB','stockFundaData',os.environ["MONGO_URL"])
+    collection = fundaDB.connectDB()
+    fundaDB.create_index(collection)
 
-    if cached_logo is not None:
+    logo_cache_key = f"{symbol}_logo"
+    logo_cache = fundaDB.find_cache(collection, logo_cache_key)
+
+    if logo_cache is not None:
         logging.info("found logo in cache")
+        logo = logo_cache["data"]
     else:
         logging.info("getting logo from api, and then storing it in cache")
-        cached_logo = create_cache(stock.get_logo(), logo_cache_key)
-        collection.insert_one(cached_logo)
-    logo = cached_logo['data']
+        logo = stock.get_logo()
+        fundaDB.save_cache(collection, logo, logo_cache_key)
 
     company_cache_key = f"{symbol}_company"
-    cached_company_info = collection.find_one({'cache_key': company_cache_key}, {
-                                              "_id": 0, 'cache_key': 0, 'expireAt': 0})
+    company_info_cache = fundaDB.find_cache(collection, company_cache_key)
 
-    if cached_company_info is not None:
+    if company_info_cache is not None:
         logging.info("found company news in cache")
+        company_info = company_info_cache["data"]
     else:
         logging.info("getting company from api, and then storing it in cache")
-        cached_company_info = create_cache(
-            stock.get_company_info(), company_cache_key)
-        collection.insert_one(cached_company_info)
+        company_info = stock.get_company_info()
+        fundaDB.save_cache(collection, company_info, company_cache_key)
 
-    company = cached_company_info['data']
-    col1, col2 = st.beta_columns([1, 4])
+    col1, col2 = st.columns([1, 4])
 
     with col1:
         st.image(logo['url'])
 
     with col2:
-        st.subheader(company['companyName'])
-        st.write(company['industry'])
+        st.subheader(company_info['companyName'])
+        st.write(company_info['industry'])
         st.subheader('Description')
-        st.write(company['description'])
+        st.write(company_info['description'])
         st.subheader('CEO')
-        st.write(company['CEO'])
+        st.write(company_info['CEO'])
 
 
-if screen == 'News':
-    collection = connectDB()
+elif screen == 'News':
+    fundaDB = StockFundaDB('projectValHubDB','stockFundaData',os.environ["MONGO_URL"])
+    collection = fundaDB.connectDB()
+    fundaDB.create_index(collection)
+
     news_cache_key = f"{symbol}_news"
-    cached_news = collection.find_one({'cache_key': news_cache_key}, {
-                                      "_id": 0, 'cache_key': 0, 'expireAt': 0})
+    news_cache = fundaDB.find_cache(collection, news_cache_key)
 
-    if cached_news is not None:
+    if news_cache is not None:
         logging.info("found news in cache")
+        news = news_cache["data"]
     else:
-        cached_news = create_cache(stock.get_company_news(), news_cache_key)
-        collection.insert_one(cached_news)
+        news = stock.get_company_news()
+        fundaDB.save_cache(collection, news, news_cache_key)
 
-    news = cached_news['data']
+    scoreDf = createSentimentScore(news)
+
+    scoreQ1, scoreQ2, scoreQ3 = scoreDf["score"].quantile([.25, .5, .75])
+
+    st.subheader("Sentiment Analysis Results (-1 mean extreme negative class, +1 mean extreme positive class)")
+    table = pd.DataFrame([{"Min":scoreDf["score"].min(), "25%":scoreQ1, "50%":scoreQ2 , "75%":scoreQ3,
+                           "Max":scoreDf["score"].max()
+                           }], index= [""]
+    )
+    st.table(table)
 
     for article in news:
         st.subheader(article['headline'])
@@ -143,22 +158,25 @@ if screen == 'News':
         st.image(article['image'])
 
 
-if screen == 'Fundamentals':
-    collection = connectDB()
+elif screen == 'Fundamentals':
+
+    fundaDB = StockFundaDB('projectValHubDB','stockFundaData',os.environ["MONGO_URL"])
+    collection = fundaDB.connectDB()
+    fundaDB.create_index(collection)
+
     stats_cache_key = f"{symbol}_stats"
-    cached_stats = collection.find_one({'cache_key': stats_cache_key}, {
-                                       "_id": 0, 'cache_key': 0, 'expireAt': 0})
-    if cached_stats is None:
-        cached_stats = create_cache(stock.get_stats(), stats_cache_key)
-        collection.insert_one(cached_stats)
+    stats_cache = fundaDB.find_cache(collection, stats_cache_key)
+
+    if stats_cache is None:
+        stats = stock.get_stats()
+        fundaDB.save_cache(collection, stats, stats_cache_key)
     else:
         logging.info("found stats in cache")
-
-    stats = cached_stats['data']
+        stats = stats_cache["data"]
 
     st.header('Ratios')
 
-    col1, col2 = st.beta_columns(2)
+    col1, col2 = st.columns(2)
 
     with col1:
         st.subheader('P/E')
@@ -184,17 +202,14 @@ if screen == 'Fundamentals':
         st.write(stats['day50MovingAvg'])
 
     fundamentals_cache_key = f"{symbol}_fundamentals"
-    cached_fundamentals = collection.find_one({'cache_key': fundamentals_cache_key}, {
-                                              "_id": 0, 'cache_key': 0, 'expireAt': 0})
+    fundamentals_cache = fundaDB.find_cache(collection, fundamentals_cache_key)
 
-    if cached_fundamentals is None:
-        cached_fundamentals = create_cache(
-            stock.get_fundamentals('quarterly'), fundamentals_cache_key)
-        collection.insert_one(cached_fundamentals)
+    if fundamentals_cache is None:
+        fundamentals = stock.get_fundamentals('quarterly')
+        fundaDB.save_cache(collection, fundamentals, fundamentals_cache_key)
     else:
         logging.info("found fundamentals in cache")
-
-    fundamentals = cached_fundamentals['data']
+        fundamentals = fundamentals_cache["data"]
 
     for quarter in fundamentals:
         st.header(f"Q{quarter['fiscalQuarter']} {quarter['fiscalYear']}")
@@ -208,39 +223,38 @@ if screen == 'Fundamentals':
     st.header("Dividends")
 
     dividends_cache_key = f"{symbol}_dividends"
-    cached_dividends = collection.find_one({'cache_key': dividends_cache_key}, {
-                                           "_id": 0, 'cache_key': 0, 'expireAt': 0})
+    dividends_cache = fundaDB.find_cache(collection, dividends_cache_key)
 
-    if cached_dividends is None:
-        cached_dividends = create_cache(
-            stock.get_dividends(), dividends_cache_key)
-        collection.insert_one(cached_dividends)
+    if dividends_cache is None:
+        dividends = stock.get_dividends()
+        fundaDB.save_cache(collection, dividends, dividends_cache_key)
     else:
         logging.info("found dividends in cache")
-
-    dividends = cached_dividends['data']
+        dividends = dividends_cache["data"]
 
     for dividend in dividends:
         st.write(dividend['paymentDate'])
         st.write(dividend['amount'])
 
-if screen == 'Ownership':
-    collection = connectDB()
+elif screen == 'Ownership':
+
     st.subheader("Institutional Ownership")
 
-    institutional_ownership_cache_key = f"{symbol}_institutional"
-    cached_institutional_ownership = collection.find_one(
-        {'cache_key': institutional_ownership_cache_key}, {"_id": 0, 'cache_key': 0, 'expireAt': 0})
+    fundaDB = StockFundaDB('projectValHubDB','stockFundaData',os.environ["MONGO_URL"])
+    collection = fundaDB.connectDB()
+    fundaDB.create_index(collection)
 
-    if cached_institutional_ownership is None:
-        cached_institutional_ownership = create_cache(
-            stock.get_institutional_ownership(), institutional_ownership_cache_key)
-        collection.insert_one(cached_institutional_ownership)
+    institutional_ownership_cache_key = f"{symbol}_institutional"
+    institutional_ownership_cache = fundaDB.find_cache(collection, institutional_ownership_cache_key)
+
+    if institutional_ownership_cache is None:
+        institutional_ownership = stock.get_institutional_ownership()
+        fundaDB.save_cache(collection, institutional_ownership, institutional_ownership_cache_key)
 
     else:
         logging.info("getting inst ownership from cache")
+        institutional_ownership = institutional_ownership_cache["data"]
 
-    institutional_ownership = cached_institutional_ownership['data']
     for institution in institutional_ownership:
         st.write(institution['date'])
         st.write(institution['entityProperName'])
@@ -249,18 +263,14 @@ if screen == 'Ownership':
     st.subheader("Insider Transactions")
 
     insider_transactions_cache_key = f"{symbol}_insider_transactions"
-    cached_insider_transactions = collection.find_one(
-        {'cache_key': insider_transactions_cache_key}, {"_id": 0, 'cache_key': 0, 'expireAt': 0})
+    insider_transactions_cache = fundaDB.find_cache(collection, insider_transactions_cache_key)
 
-    if cached_insider_transactions is None:
-        cached_insider_transactions = create_cache(
-            stock.get_insider_transactions(), insider_transactions_cache_key)
-        collection.insert_one(cached_insider_transactions)
-
+    if insider_transactions_cache is None:
+        insider_transactions = stock.get_insider_transactions()
+        fundaDB.save_cache(collection, insider_transactions, insider_transactions_cache_key)
     else:
         logging.info("getting insider transactions from cache")
-
-    insider_transactions = cached_insider_transactions['data']
+        insider_transactions = insider_transactions_cache["data"]
 
     for transaction in insider_transactions:
         st.write(transaction['filingDate'])
@@ -268,6 +278,72 @@ if screen == 'Ownership':
         st.write(transaction['transactionShares'])
         st.write(transaction['transactionPrice'])
 
-if screen == 'Strategy':
+elif screen == 'Strategy':
     from src.StreamStrat import run
     run(stock_market_option, symbol, get_company_name(symbol))
+
+elif screen == "":
+    from src.database.mongoDB import StockPriceDB
+    from bokeh.plotting import figure
+    from bokeh.models import ColumnDataSource, HoverTool
+
+    dbName = 'projectValHubDB'
+    colName = 'hkStockPriceData'
+
+    stockPriceDB = StockPriceDB(dbName, colName, os.environ["MONGO_URL"], stock_market_option)
+    collection = stockPriceDB.connectDB()
+    stockPriceDB.create_index(collection)
+
+    # download the data
+    today = date.today()
+    oneMonthAgo = today - timedelta(days=30)
+
+    stockPriceDB.get_data(collection, symbol, oneMonthAgo, today)
+
+    ## get data from db
+    df = stockPriceDB.load_data(collection, symbol, oneMonthAgo, today)
+
+    company_name = get_company_name(symbol)
+
+    source1 = ColumnDataSource(data=df)
+    # plot for close recent month
+    closePlotObj = figure(x_axis_type="datetime", plot_height=350)
+    closePlotObj.line(x='index', y='Close', source=source1, line_width=4)
+    closePlotObj.xaxis.axis_label = 'Date'
+    closePlotObj.yaxis.axis_label = f'Close Price {stock_market_option}D'
+
+    closePlotObj.add_tools(
+        HoverTool(
+            tooltips=[('date', '@index{%F}'), ('close', '$@Close{0.2f}')],
+            formatters={
+                '@index': 'datetime'
+            },
+            mode="vline"
+        )
+    )
+
+    # plot for volume recent month
+    source2 = ColumnDataSource(data=df)
+    volumePlotObj = figure(x_axis_type="datetime", plot_height=350)
+    volumePlotObj.line(x='index', y='Volume', source=source2, line_width=4)
+    volumePlotObj.xaxis.axis_label = 'Date'
+    volumePlotObj.yaxis.axis_label = f'Volume {stock_market_option}D'
+
+    volumePlotObj.add_tools(
+        HoverTool(
+            tooltips=[('date', '@index{%F}'), ('volume', '@Volume{0.00 a}')],
+            formatters={
+                '@index': 'datetime'
+            },
+            mode="vline"
+        )
+    )
+
+    # Display the close prices
+    st.header(company_name+" Close Price\n")
+    #st.line_chart(df['Close'])
+    st.bokeh_chart(closePlotObj, use_container_width=True)
+    # Display the volume
+    st.header(company_name+" Volume\n")
+    st.bokeh_chart(volumePlotObj, use_container_width=True)
+    #st.line_chart(df['Volume'])
