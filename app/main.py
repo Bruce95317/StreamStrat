@@ -16,7 +16,6 @@ def get_company_name(symbol):
     if symbol in stock_dict.keys():
         return stock_dict[symbol]
 
-
 def createSentimentScore(news):
     """
     Pass each news into vader model,calculate their compound score
@@ -42,7 +41,6 @@ def createSentimentScore(news):
         newsDate.append(date)
     result = pd.DataFrame({"date": newsDate,"headline": newsHeadline,"score": resultScores})
     return result
-
 
 # client = redis.Redis(host="localhost", port=6379)
 
@@ -140,11 +138,9 @@ elif screen == 'News':
 
     scoreDf = createSentimentScore(news)
 
-    scoreQ1, scoreQ2, scoreQ3 = scoreDf["score"].quantile([.25, .5, .75])
-
-    st.subheader("Sentiment Analysis Results (-1 mean extreme negative class, +1 mean extreme positive class)")
-    table = pd.DataFrame([{"Min":scoreDf["score"].min(), "25%":scoreQ1, "50%":scoreQ2 , "75%":scoreQ3,
-                           "Max":scoreDf["score"].max()
+    st.subheader("Sentiment Analysis Results for Following News (-1 means extreme negative class, +1 means extreme positive class)")
+    table = pd.DataFrame([{"Mean": scoreDf["score"].mean(), "Standard Deviation": scoreDf["score"].std(),
+                           "Min":scoreDf["score"].min(), "Max":scoreDf["score"].max()
                            }], index= [""]
     )
     st.table(table)
